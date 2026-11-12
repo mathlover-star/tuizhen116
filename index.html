@@ -158,7 +158,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 <div class="wrap">
   <header>
     <h1>116 推甄選校系統</h1>
-    <p class="lede">輸入統測五科級分，看 116 年各國立校系第一階段篩選的分數夠不夠。第十版（新增：48 個校系、資料齊全度標示、分數用不完的提醒、依歷年波動調整的安全線、各科 PR 選填與 116 超額新制說明）；採計科目已對照 116 年官方初階資料，倍率和名額要等 12 月簡章。這裡顯示的是分數差距，不是錄取機率。</p>
+    <p class="lede">輸入統測五科級分，看 116 年各國立校系第一階段篩選的分數夠不夠。第十版（新增：48 個校系、資料齊全度標示、分數用不完的提醒、依歷年波動調整的安全線、各科 PR 選填、116 超額新制說明、統測選考組合比較、0 分規定、老師匯入簡章資料）；採計科目已對照 116 年官方初階資料，倍率和名額要等 12 月簡章。這裡顯示的是分數差距，不是錄取機率。</p>
   </header>
 
   <section class="panel" aria-labelledby="h-score">
@@ -226,6 +226,18 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
     <div class="row" style="margin-top:10px"><button class="ghost" id="planFav" type="button">全部加入收藏</button></div>
     <details style="margin-top:10px"><summary>你的收藏搭配得好不好？</summary><div id="favMix"></div></details>
   </section>
+  <section class="panel noprint" aria-labelledby="h-combo">
+    <h2 id="h-combo">統測要選考哪幾科？</h2>
+    <p class="note" style="margin:4px 0 8px">用你現在輸入的級分，比較不同考科組合：考的科目越少，能報的校系越少，但可以把力氣放在擅長的科目。單群至少考 2 科、含 1 科專業科目。這只是依目前分數的試算，不是保證。</p>
+    <div class="seg" id="comboN" role="group" aria-label="考幾科">
+      <button type="button" data-cn="2" aria-pressed="false">2 科</button>
+      <button type="button" data-cn="3" aria-pressed="false">3 科</button>
+      <button type="button" data-cn="4" aria-pressed="true">4 科</button>
+      <button type="button" data-cn="5" aria-pressed="false">5 科</button>
+    </div>
+    <div class="row" style="margin-top:8px"><button class="ghost" id="comboBtn" type="button">幫我比較</button></div>
+    <div id="comboOut"></div>
+  </section>
   <section class="panel" aria-labelledby="h-sum">
     <h2 id="h-sum">結果分成四類<span class="noprint">（點選可只看該類）</span></h2>
     <div class="tiles" id="tiles" style="margin-top:10px"></div>
@@ -259,6 +271,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
     </details>
   </section>
 
+  <section class="panel noprint">
+    <details id="impBox">
+      <summary>老師專用：匯入 116 簡章的正式採科與超額資料（12 月後）</summary>
+      <p class="note" style="margin:8px 0">匯入 CSV，欄位：群類（09 或 21）、學校、科系、第一階段採科、第二階段採科，另可加「超額比序科目」「超額切點」。科目用＋或、分隔，例如 英文＋專一。只在這個畫面有效，不上傳、不儲存，重新開啟就清除。正式採科和目前模型不同的校系，會停止沿用舊門檻。</p>
+      <div class="row"><input id="impFile" type="file" accept=".csv,text/csv"><button class="ghost" id="impClear" type="button">清除匯入</button><button class="ghost" id="impExport" type="button">匯出目前結果 CSV</button></div>
+      <div class="note" id="impStatus" style="margin-top:8px">尚未匯入。</div>
+    </details>
+  </section>
   <section class="panel guide">
     <details>
       <summary>給家長與老師：這個系統怎麼算</summary>
@@ -305,6 +325,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
         <li>資料齊全度：「近三年資料齊全」表示 113～115 年門檻都查得到，參考性較高；「歷年資料較少」表示多半只有近一年，估得較粗；「採計可能有變動」表示比對官方初階資料時發現科目可能調整，要以 12 月簡章為準。</li>
         <li>PR 值：由你自行填入模考成績單上的數字，只做對照顯示，不換算成機率、不影響任何排序或分類。</li>
         <li>同級分超額：116 年起由各校系自行選定比序科目——必須從第一、第二階段參採的統測科目中選取，最多四科加總；因此不是一律比五科總級分，也不一定等於第一階段採計科目的總分。各校系選哪幾科以正式簡章為準；大方向是偏科的同學在科目對得上的校系較佔優勢，可搭配「科目對得上的在前」排序使用。</li>
+        <li>0 分規定：校系採計的統測科目，只要有 1 科沒報考，或 2 科以上是 0 分（缺考也算 0 分），就不能通過第一階段，這類校系會歸在「不能報」。</li>
+        <li>統測選考組合比較：用你目前輸入的級分，試算只考 2～5 科時，各能報多少校系、有幾個達標，方便決定要不要放掉某一科。</li>
         <li>分數用不完的提醒：每一項都比需要的多 3 級分以上才會出現，只是提醒可以往上挑，不是要你放棄穩的校系。</li>
       </ul>
       <h3>沒有算進來的</h3>
@@ -364,9 +386,11 @@ const names = a => a.map(i => SUBJ[i]).join("、");
 const keyOf = r => r.g + "|" + r.school + r.dept;
 const gName = g => g === "09" ? "09 商管" : "21 資管";
 const sumOf = (c, sc) => c.s.reduce((a,i) => a + sc[i], 0);
-const isWait = r => !r.c.length;
+const isWait = r => !r.c.length || r.imp === "changed";
 const needs = r => r.s1 ? [...new Set([...r.s1, ...r.s2])] : [];
 const blockedBy = r => needs(r).filter(i => skip.has(i));
+/* 官方規定：參採科目有任 1 科沒報考、或 2 科以上是 0 分（缺考也算 0 分），不能通過第一階段 */
+const zeroBy = r => needs(r).filter(i => !skip.has(i) && scores[i] === 0);
 const hit = r => needs(r).filter(i => picks.has(i)).length;
 const pickOK = r => {
   if (!picks.size) return true;
@@ -402,9 +426,9 @@ function evalRow(r){
   });
   const weak = res.length ? res.reduce((w,x) => x.per < w.per ? x : w, res[0]) : null;
   const years = r.st === "same" && r.src === "hist" ? [0,1,2].map(k => r.c.every((c,j) => res[j].you >= c.y[k])) : null;
-  const blocked = blockedBy(r);
+  const blocked = blockedBy(r), zero = zeroBy(r);
   let cat, plan = null, inRange = false, demoted = false;
-  if (blocked.length) cat = "out";
+  if (blocked.length || zero.length >= 2) cat = "out";
   else if (isWait(r)) cat = "wait";
   else if (res.every(x => x.m >= 0)) cat = res.every(x => x.st === "safe") ? "safe" : "pass";
   else {
@@ -414,7 +438,7 @@ function evalRow(r){
     inRange = res.every(x => x.you >= x.c.lo);
   }
   if (cat === "safe" && (r.st === "drop" || r.st === "add")) { cat = "pass"; demoted = true; }   /* 116 改了採計科目：不列為穩穩達標 */
-  return {r, res, cat, weak, years, plan, inRange, blocked, demoted};
+  return {r, res, cat, weak, years, plan, inRange, blocked, zero, demoted};
 }
 
 function marginText(m){ return m > 0 ? `多 ${m} 分` : m === 0 ? "剛好達到" : `還差 ${-m} 分`; }
@@ -475,8 +499,8 @@ function oldHTML(r){
 }
 function cardHTML(e){
   const r = e.r, w = e.weak;
-  if (e.cat === "out") return plainCardHTML(e, `你不考${names(e.blocked)}，這個校系 116 年會採計，所以不能報。`);
-  if (e.cat === "wait") return plainCardHTML(e, r.st === "absent"
+  if (e.cat === "out") return plainCardHTML(e, e.blocked.length ? `你不考${names(e.blocked)}，這個校系 116 年會採計，所以不能報。` : `這個校系採計的${names(e.zero)}都是 0 分（缺考也算 0 分）。採計科目有 2 科以上是 0 分，就不能通過第一階段。`);
+  if (e.cat === "wait") return plainCardHTML(e, r.imp === "changed" ? "老師匯入的正式採科和原本模型用的不一樣，所以不沿用舊門檻，這個校系要等重新建模才能判斷。" : r.st === "absent"
     ? "116 年初階資料的這個群類裡沒有列出這個校系，可能停招、改名或改到其他群類，請以 116 簡章為準。"
     : "沒有歷年門檻可以推估，只能先看 116 年採計哪些科目。等 12 月簡章公布倍率和名額後再判斷。");
   let sum;
@@ -503,6 +527,14 @@ function cardHTML(e){
   chips.push(`<span class="chip">篩選嚴格度：${r.tier}</span>`);
   if (r.st === "same" && r.stab) chips.push(`<span class="chip ${r.stab === "變動大" ? "warn" : ""}">歷年門檻：${r.stab}</span>`);
   if (r.low) chips.push(`<span class="chip warn">報名人數${r.low === "低" ? "少" : "偏少"}，門檻起伏可能大</span>`);
+  if (r.tie && r.tie.length) {
+    const lastM = e.res.length ? e.res[e.res.length - 1].m : null;
+    chips.push(`<span class="chip">同級分超額比序科目：${names(r.tie)}${r.imp ? "（老師匯入）" : ""}</span>`);
+    if (lastM === 0) {
+      const ts = r.tie.reduce((a,i) => a + scores[i], 0);
+      chips.push(`<span class="chip warn">最後一關剛好達到：你的比序總和 ${ts}${r.cutoff != null ? `，公告切點 ${r.cutoff}，${ts >= r.cutoff ? "有機會" : "偏低"}（假設性，非正式結果）` : ""}</span>`);
+    }
+  }
   if (r.sw) chips.push(`<span class="chip warn">近年各關門檻一起上升，今年可能回落，建議多留保底</span>`);
   if (r.q) chips.push(`<span class="chip">115 名額 ${r.q}</span>`);
   const prSub = needs(r).filter(i => prs[i] != null);
@@ -658,7 +690,8 @@ function render(){
     const b = document.createElement("button");
     b.type = "button"; b.className = "linkbtn"; b.dataset.cat = "out";
     b.textContent = state.cat === "out" ? "回到全部" : `看這 ${counts.out} 個校系`;
-    $("info").append(` 因為不考${names([...skip].sort())}，有 ${counts.out} 個校系不能報，已排除。`, b);
+    const why = [skip.size ? `不考${names([...skip].sort())}` : "", scores.filter((v,i) => !skip.has(i) && v === 0).length >= 2 ? "兩科以上是 0 分" : ""].filter(Boolean).join("、");
+    $("info").append(` 因為${why || "科目條件不符"}，有 ${counts.out} 個校系不能報，已排除。`, b);
   }
   document.querySelectorAll("[data-g]").forEach(b => b.setAttribute("aria-pressed", b.dataset.g === state.g));
   document.querySelectorAll("[data-sort]").forEach(b => b.setAttribute("aria-pressed", b.dataset.sort === state.sort));
@@ -680,6 +713,108 @@ function setScore(i, v){
   scores[i] = v; $("s" + i).value = v; isDemo = false; store.set("scores", scores); render();
 }
 function refilter(){ state.shown = PAGE; render(); }
+/* ───────── 統測選考組合比較 ───────── */
+function comboStats(combo){
+  const saved = skip;
+  skip = new Set([0,1,2,3,4].filter(i => !combo.includes(i)));
+  const c = {ok:0, pass:0, near:0, far:0};
+  for (const r of DATA.rows) {
+    if (state.g !== "all" && r.g !== state.g) continue;
+    const e = evalRow(r);
+    if (e.cat === "safe" || e.cat === "pass") { c.ok++; c.pass++; }
+    else if (e.cat === "near") { c.ok++; c.near++; }
+    else if (e.cat === "far") { c.ok++; c.far++; }
+  }
+  skip = saved;
+  return c;
+}
+let comboN = 4;
+function comboHTML(){
+  const rows = [];
+  for (let m = 1; m < 32; m++) {
+    const combo = [0,1,2,3,4].filter(i => m & (1 << i));
+    if (combo.length !== comboN || !combo.some(i => i >= 3)) continue;
+    rows.push({combo, st: comboStats(combo)});
+  }
+  rows.sort((a,b) => b.st.ok - a.st.ok || b.st.pass - a.st.pass);
+  if (!rows.length) return `<p class="note">沒有符合的組合。</p>`;
+  return `<div class="tablewrap"><table class="hist"><thead><tr><th>考科組合</th><th>能報的校系</th><th>達標</th><th>差一點</th><th>還有距離</th><th></th></tr></thead><tbody>${
+    rows.map(x => `<tr><td>${names(x.combo)}</td><td>${x.st.ok}</td><td>${x.st.pass}</td><td>${x.st.near}</td><td>${x.st.far}</td><td><button class="ghost" type="button" data-cs="${x.combo.join(",")}">只考這組</button></td></tr>`).join("")
+  }</tbody></table></div><p class="note" style="margin:6px 0 0">「達標」包含穩穩達標和達標但不穩。按「只考這組」會把沒選的科目設成不考，校系清單會跟著改變，要改回來到上面「不考」的選項取消勾選。</p>`;
+}
+
+/* ───────── 老師匯入簡章資料（只在本頁，不儲存） ───────── */
+const ORIGSUB = new Map();
+const normName = s => String(s || "").replace(/\s/g, "").replace(/^國立/, "").replace(/台/g, "臺");
+function parseCSV(text){
+  text = text.replace(/^﻿/, "");
+  const rows = []; let a = [], cell = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"') { if (q && text[i+1] === '"') { cell += '"'; i++; } else q = !q; }
+    else if (ch === "," && !q) { a.push(cell); cell = ""; }
+    else if ((ch === "\n" || ch === "\r") && !q) { if (ch === "\r" && text[i+1] === "\n") i++; a.push(cell); if (a.some(x => x.trim())) rows.push(a); a = []; cell = ""; }
+    else cell += ch;
+  }
+  if (q) throw new Error("CSV 的引號沒有成對");
+  if (a.length || cell) { a.push(cell); if (a.some(x => x.trim())) rows.push(a); }
+  if (!rows.length) return [];
+  const hdr = rows[0].map(x => x.trim());
+  return rows.slice(1).map(c => Object.fromEntries(hdr.map((h,i) => [h, (c[i] ?? "").trim()])));
+}
+function parseSubs(t){
+  const out = [], bad = [];
+  String(t || "").split(/[＋+,;，、\s]+/).filter(Boolean).forEach(x => { const i = SUBJ.indexOf(x); i < 0 ? bad.push(x) : out.includes(i) || out.push(i); });
+  return {out, bad};
+}
+function clearImport(){
+  for (const [r, o] of ORIGSUB) { r.s1 = o.s1; r.s2 = o.s2; r.tie = o.tie; r.cutoff = o.cutoff; r.imp = o.imp; }
+  ORIGSUB.clear();
+}
+function applyImport(text){
+  clearImport();
+  const list = parseCSV(text), idx = new Map();
+  DATA.rows.forEach(r => idx.set(r.g + "|" + normName(r.school) + "|" + normName(r.dept), r));
+  let ok = 0, chg = 0; const miss = [], err = [];
+  list.forEach((x, n) => {
+    const g = String(x["群類"] || x["群"] || "").replace(/^0*/, "") === "9" ? "09" : String(x["群類"] || x["群"] || "").replace(/^0*/, "") === "21" ? "21" : "";
+    const r = idx.get(g + "|" + normName(x["學校"]) + "|" + normName(x["科系"]));
+    const label2 = `第 ${n + 2} 列（${x["學校"] || ""}${x["科系"] || ""}）`;
+    if (!r) { miss.push(label2); return; }
+    const a = parseSubs(x["第一階段採科"]), b = parseSubs(x["第二階段採科"]), t = parseSubs(x["超額比序科目"]);
+    if (a.bad.length || b.bad.length || t.bad.length) { err.push(`${label2} 有不認得的科目：${[...a.bad, ...b.bad, ...t.bad].join("、")}`); return; }
+    if (!a.out.length) { err.push(`${label2} 第一階段採科是空的`); return; }
+    const b2 = b.out.length ? b.out : a.out, uni = [...new Set([...a.out, ...b2])];
+    if (a.out.length > 4 || uni.length > 4) { err.push(`${label2} 第一、二階段合計超過 4 科`); return; }
+    if (t.out.length > 4 || t.out.some(i => !uni.includes(i))) { err.push(`${label2} 超額比序科目要從採計科目中選，最多 4 科`); return; }
+    const cut = x["超額切點"] === "" || x["超額切點"] === undefined ? null : Number(x["超額切點"]);
+    if (cut !== null && !Number.isFinite(cut)) { err.push(`${label2} 超額切點不是數字`); return; }
+    if (!ORIGSUB.has(r)) ORIGSUB.set(r, {s1: r.s1, s2: r.s2, tie: r.tie, cutoff: r.cutoff, imp: r.imp});
+    const model = [...new Set(r.c.flatMap(c => c.s))].sort().join();
+    r.s1 = a.out; r.s2 = b2; r.tie = t.out; r.cutoff = cut;
+    r.imp = r.c.length && uni.slice().sort().join() !== model ? "changed" : "verified";
+    r.imp === "changed" ? chg++ : ok++;
+  });
+  return {total: list.length, ok, chg, miss, err};
+}
+function impReport(res){
+  const parts = [`讀到 ${res.total} 列：採科和模型相同 ${res.ok} 個、採科不同（停止沿用舊門檻）${res.chg} 個。`];
+  if (res.miss.length) parts.push(`找不到的校系 ${res.miss.length} 個：${res.miss.slice(0, 8).map(esc).join("；")}${res.miss.length > 8 ? "…" : ""}`);
+  if (res.err.length) parts.push(`格式有問題、已略過 ${res.err.length} 列：${res.err.slice(0, 5).map(esc).join("；")}${res.err.length > 5 ? "…" : ""}`);
+  $("impStatus").innerHTML = parts.join("<br>");
+}
+function exportAudit(){
+  const csv = c => /[",\r\n]/.test(String(c)) ? '"' + String(c).replace(/"/g, '""') + '"' : String(c);
+  const head = ["群類","學校","科系","分類","第一階段採科","第二階段採科","最後一關差距","匯入狀態","超額比序科目","比序總和","超額切點"];
+  const lines = [head.join(",")];
+  for (const r of DATA.rows) {
+    const e = evalRow(r), last = e.res.length ? e.res[e.res.length - 1].m : "";
+    lines.push([r.g, r.school, r.dept, NAME[e.cat], r.s1 ? names(r.s1) : "", r.s2 ? names(r.s2) : "", last, r.imp === "changed" ? "採科不同" : r.imp === "verified" ? "已匯入" : "", r.tie && r.tie.length ? names(r.tie) : "", r.tie && r.tie.length ? r.tie.reduce((a,i) => a + scores[i], 0) : "", r.cutoff ?? ""].map(csv).join(","));
+  }
+  const u = URL.createObjectURL(new Blob(["﻿" + lines.join("\n")], {type: "text/csv;charset=utf-8"}));
+  const a = document.createElement("a"); a.href = u; a.download = "116選校結果.csv"; a.click(); setTimeout(() => URL.revokeObjectURL(u), 2000);
+}
+
 document.addEventListener("click", ev => {
   const t = ev.target.closest("button"); if (!t) return;
   if (t.dataset.d) setScore(+t.dataset.i, scores[+t.dataset.i] + Number(t.dataset.d));
@@ -695,6 +830,11 @@ document.addEventListener("click", ev => {
   else if (t.id === "favOnly") { state.favOnly = !state.favOnly; refilter(); }
   else if (t.id === "more") { state.shown += PAGE; render(); }
   else if (t.id === "print") { state.shown = Infinity; render(); window.print(); }
+  else if (t.dataset.cn) { comboN = +t.dataset.cn; document.querySelectorAll("[data-cn]").forEach(b => b.setAttribute("aria-pressed", b.dataset.cn === t.dataset.cn)); $("comboOut").innerHTML = comboHTML(); }
+  else if (t.id === "comboBtn") { $("comboOut").innerHTML = comboHTML(); }
+  else if (t.dataset.cs !== undefined) { const keep = t.dataset.cs.split(",").map(Number); skip = new Set([0,1,2,3,4].filter(i => !keep.includes(i))); store.set("skip", [...skip]); skipUI(); refilter(); window.scrollTo({top: 0, behavior: "smooth"}); }
+  else if (t.id === "impClear") { clearImport(); $("impFile").value = ""; $("impStatus").textContent = "已清除匯入。"; refilter(); }
+  else if (t.id === "impExport") { exportAudit(); }
   else if (t.id === "reset") { scores = DEMO.slice(); isDemo = true; store.set("scores", null); buildScores(); render(); }
 });
 document.addEventListener("change", ev => {
@@ -705,6 +845,12 @@ document.addEventListener("change", ev => {
     prs[i] = Number.isFinite(v) ? v : null; ev.target.value = prs[i] ?? ""; store.set("prs", prs); render();
   }
   else if (ev.target.id === "school") { state.school = ev.target.value; refilter(); }
+  else if (ev.target.id === "impFile") {
+    const f = ev.target.files && ev.target.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => { try { impReport(applyImport(String(rd.result))); } catch (e) { $("impStatus").textContent = "讀不進來：" + e.message; } syncSchools(); refilter(); };
+    rd.readAsText(f, "utf-8");
+  }
   else if (ev.target.dataset.skip !== undefined) {
     const i = +ev.target.dataset.skip;
     ev.target.checked ? skip.add(i) : skip.delete(i);
