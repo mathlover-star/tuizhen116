@@ -310,7 +310,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
       <h3>沒有算進來的</h3>
       <ul>
         <li>第二階段甄試、同級分超額比序、各系 116 年的名額與倍率變化、報名人數變化。選考之後，來報名的人也可能和往年不同。</li>
-        <li>剛好達到要求時，如果同分的人太多，還要比篩選科目的級分總和，請看當年簡章。</li>
+        <li>前面的關卡剛好過標只算通過；只有最後一關剛好在門檻上、同分的人太多時，才會啟動同級分超額，改比學校自選科目的級分總和，請看當年簡章。</li>
         <li>所以這裡只能說「分數夠不夠過第一階段」，不能說錄取機率。</li>
       </ul>
       <h3>6 個志願怎麼搭配</h3>
@@ -484,7 +484,7 @@ function cardHTML(e){
   if (e.cat === "safe" && w.per >= 3) sum += " 你的分數比需要的高出不少，可以把一、兩個名額拿去挑戰更想讀的校系。";
   else sum = `最需要補的是「${esc(label(w.c))}」，${marginText(w.m)}。`;
   if (e.demoted) sum += " 這個校系 116 年改了採計科目，估計比較不確定，所以不列為「穩穩達標」。";
-  if (e.res.some(x => x.m === 0)) sum += " 有一項剛好達到，同分的人太多時要比篩選科目總和。";
+  if (e.res.length && e.res[e.res.length-1].m === 0) sum += " 最後一關剛好達到，如果同分的人太多，還要比學校自選科目的級分總和（看正式簡章）。";
   let plan = "";
   if (e.cat === "near" || e.cat === "far") {
     const rng = e.inRange ? "每一項都還在可能範圍內，門檻下降也有機會。" : "有一項已低於可能範圍的下限，主要要靠補分。";
