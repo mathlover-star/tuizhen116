@@ -274,7 +274,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
   <section class="panel noprint">
     <details id="impBox">
       <summary>老師專用：匯入 116 簡章的正式採科與超額資料（12 月後）</summary>
-      <p class="note" style="margin:8px 0">匯入 CSV，欄位：群類（09 或 21）、學校、科系、第一階段採科、第二階段採科，另可加「超額比序科目」「超額切點」。科目用＋或、分隔，例如 英文＋專一。只在這個畫面有效，不上傳、不儲存，重新開啟就清除。正式採科和目前模型不同的校系，會停止沿用舊門檻。</p>
+      <p class="note" style="margin:8px 0">匯入 CSV，欄位：群類（09 或 21）、學校、科系、第一階段採科、第二階段採科，另可加「超額比序科目」「超額切點」，以及「來源類型」「來源日期」「來源說明」。來源類型填：簡章、校系官網（這兩種和留白視為正式資料）；校系官方社群、非官方（例如臉書、IG、Threads 貼文）只會顯示「尚未用簡章核實」的提醒，不會改變任何判斷。科目用＋或、分隔，例如 英文＋專一。只在這個畫面有效，不上傳、不儲存，重新開啟就清除。正式採科和目前模型不同的校系，會停止沿用舊門檻。</p>
       <div class="row"><input id="impFile" type="file" accept=".csv,text/csv"><button class="ghost" id="impClear" type="button">清除匯入</button><button class="ghost" id="impExport" type="button">匯出目前結果 CSV</button></div>
       <div class="note" id="impStatus" style="margin-top:8px">尚未匯入。</div>
     </details>
@@ -529,7 +529,8 @@ function cardHTML(e){
   if (r.low) chips.push(`<span class="chip warn">報名人數${r.low === "低" ? "少" : "偏少"}，門檻起伏可能大</span>`);
   if (r.tie && r.tie.length) {
     const lastM = e.res.length ? e.res[e.res.length - 1].m : null;
-    chips.push(`<span class="chip">同級分超額比序科目：${names(r.tie)}${r.imp ? "（老師匯入）" : ""}</span>`);
+    const ts_ = r.tsrc, srcTx = ts_ ? `來源：${ts_.type}${ts_.date ? "，" + esc(ts_.date) : ""}${ts_.formal ? "" : "，尚未用簡章核實"}` : "";
+    chips.push(`<span class="chip${ts_ && !ts_.formal ? " warn" : ""}">同級分超額比序科目：${names(r.tie)}${r.imp ? "（老師匯入）" : ""}${srcTx ? "｜" + srcTx : ""}</span>`);
     if (lastM === 0) {
       const ts = r.tie.reduce((a,i) => a + scores[i], 0);
       chips.push(`<span class="chip warn">最後一關剛好達到：你的比序總和 ${ts}${r.cutoff != null ? `，公告切點 ${r.cutoff}，${ts >= r.cutoff ? "有機會" : "偏低"}（假設性，非正式結果）` : ""}</span>`);
@@ -774,14 +775,14 @@ function parseSubs(t){
   return {out, bad};
 }
 function clearImport(){
-  for (const [r, o] of ORIGSUB) { r.s1 = o.s1; r.s2 = o.s2; r.tie = o.tie; r.cutoff = o.cutoff; r.imp = o.imp; }
+  for (const [r, o] of ORIGSUB) { r.s1 = o.s1; r.s2 = o.s2; r.tie = o.tie; r.cutoff = o.cutoff; r.imp = o.imp; r.tsrc = o.tsrc; }
   ORIGSUB.clear();
 }
 function applyImport(text){
   clearImport();
   const list = parseCSV(text), idx = new Map();
   DATA.rows.forEach(r => idx.set(r.g + "|" + normName(r.school) + "|" + normName(r.dept), r));
-  let ok = 0, chg = 0; const miss = [], err = [];
+  let ok = 0, chg = 0, soft = 0, diffSoft = 0; const miss = [], err = [];
   list.forEach((x, n) => {
     const g = String(x["群類"] || x["群"] || "").replace(/^0*/, "") === "9" ? "09" : String(x["群類"] || x["群"] || "").replace(/^0*/, "") === "21" ? "21" : "";
     const r = idx.get(g + "|" + normName(x["學校"]) + "|" + normName(x["科系"]));
@@ -795,27 +796,37 @@ function applyImport(text){
     if (t.out.length > 4 || t.out.some(i => !uni.includes(i))) { err.push(`${label2} 超額比序科目要從採計科目中選，最多 4 科`); return; }
     const cut = x["超額切點"] === "" || x["超額切點"] === undefined ? null : Number(x["超額切點"]);
     if (cut !== null && !Number.isFinite(cut)) { err.push(`${label2} 超額切點不是數字`); return; }
-    if (!ORIGSUB.has(r)) ORIGSUB.set(r, {s1: r.s1, s2: r.s2, tie: r.tie, cutoff: r.cutoff, imp: r.imp});
+    if (!ORIGSUB.has(r)) ORIGSUB.set(r, {s1: r.s1, s2: r.s2, tie: r.tie, cutoff: r.cutoff, imp: r.imp, tsrc: r.tsrc});
+    /* 來源類型：簡章、校系官網、（空白＝老師核實）→ 當正式資料；校系官方社群、非官方（FB／IG／Threads 等）→ 只提醒，不改任何判斷 */
+    const stype = x["來源類型"] || "老師核實", sdate = x["來源日期"] || "", snote = x["來源說明"] || "";
+    const formal = ["簡章", "校系官網", "老師核實"].includes(stype);
+    r.tsrc = {type: stype, date: sdate, note: snote, formal};
+    if (!formal) {
+      r.tie = t.out; r.cutoff = cut; soft++;
+      if (r.s1 && (a.out.slice().sort().join() !== r.s1.slice().sort().join())) diffSoft++;
+      return;
+    }
     const model = [...new Set(r.c.flatMap(c => c.s))].sort().join();
     r.s1 = a.out; r.s2 = b2; r.tie = t.out; r.cutoff = cut;
     r.imp = r.c.length && uni.slice().sort().join() !== model ? "changed" : "verified";
     r.imp === "changed" ? chg++ : ok++;
   });
-  return {total: list.length, ok, chg, miss, err};
+  return {total: list.length, ok, chg, soft, diffSoft, miss, err};
 }
 function impReport(res){
-  const parts = [`讀到 ${res.total} 列：採科和模型相同 ${res.ok} 個、採科不同（停止沿用舊門檻）${res.chg} 個。`];
+  const parts = [`讀到 ${res.total} 列：正式來源且採科和模型相同 ${res.ok} 個、採科不同（停止沿用舊門檻）${res.chg} 個。`];
+  if (res.soft) parts.push(`社群或非官方來源 ${res.soft} 個：只顯示提醒（標「尚未用簡章核實」），不改變任何判斷${res.diffSoft ? `；其中 ${res.diffSoft} 個的採科和目前資料不同，沒有採用，請以簡章確認` : ""}。`);
   if (res.miss.length) parts.push(`找不到的校系 ${res.miss.length} 個：${res.miss.slice(0, 8).map(esc).join("；")}${res.miss.length > 8 ? "…" : ""}`);
   if (res.err.length) parts.push(`格式有問題、已略過 ${res.err.length} 列：${res.err.slice(0, 5).map(esc).join("；")}${res.err.length > 5 ? "…" : ""}`);
   $("impStatus").innerHTML = parts.join("<br>");
 }
 function exportAudit(){
   const csv = c => /[",\r\n]/.test(String(c)) ? '"' + String(c).replace(/"/g, '""') + '"' : String(c);
-  const head = ["群類","學校","科系","分類","第一階段採科","第二階段採科","最後一關差距","匯入狀態","超額比序科目","比序總和","超額切點"];
+  const head = ["群類","學校","科系","分類","第一階段採科","第二階段採科","最後一關差距","匯入狀態","超額比序科目","比序總和","超額切點","來源類型","來源日期"];
   const lines = [head.join(",")];
   for (const r of DATA.rows) {
     const e = evalRow(r), last = e.res.length ? e.res[e.res.length - 1].m : "";
-    lines.push([r.g, r.school, r.dept, NAME[e.cat], r.s1 ? names(r.s1) : "", r.s2 ? names(r.s2) : "", last, r.imp === "changed" ? "採科不同" : r.imp === "verified" ? "已匯入" : "", r.tie && r.tie.length ? names(r.tie) : "", r.tie && r.tie.length ? r.tie.reduce((a,i) => a + scores[i], 0) : "", r.cutoff ?? ""].map(csv).join(","));
+    lines.push([r.g, r.school, r.dept, NAME[e.cat], r.s1 ? names(r.s1) : "", r.s2 ? names(r.s2) : "", last, r.imp === "changed" ? "採科不同" : r.imp === "verified" ? "已匯入" : "", r.tie && r.tie.length ? names(r.tie) : "", r.tie && r.tie.length ? r.tie.reduce((a,i) => a + scores[i], 0) : "", r.cutoff ?? "", r.tsrc ? r.tsrc.type : "", r.tsrc ? r.tsrc.date : ""].map(csv).join(","));
   }
   const u = URL.createObjectURL(new Blob(["﻿" + lines.join("\n")], {type: "text/csv;charset=utf-8"}));
   const a = document.createElement("a"); a.href = u; a.download = "116選校結果.csv"; a.click(); setTimeout(() => URL.revokeObjectURL(u), 2000);
