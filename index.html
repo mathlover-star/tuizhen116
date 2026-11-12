@@ -193,7 +193,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
       <select class="sel" id="school" aria-label="選擇學校"></select>
     </div>
     <div class="row" style="margin-top:8px">
-      <input class="search" id="q" type="search" placeholder="搜尋科系，例如：會計、資管" aria-label="搜尋學校或科系">
+      <select class="sel" id="dept" aria-label="選擇科系"></select>
       <button class="ghost" id="favOnly" type="button" aria-pressed="false">☆ 只看收藏</button>
     </div>
     <div style="margin-top:10px">
@@ -377,7 +377,7 @@ let picks = new Set((store.get("picks", []) || []).filter(i => i >= 0 && i <= 4)
 let pickMode = ["any","all","only"].includes(store.get("pickMode","any")) ? store.get("pickMode","any") : "any";
 let planMode = ["safe3","bal"].includes(store.get("planMode","safe3")) ? store.get("planMode","safe3") : "safe3";
 let planKeys = [];
-const state = {g: store.get("g","all"), cat: null, q: "", school: "", sort: "strict", favOnly: false, shown: PAGE};
+const state = {g: store.get("g","all"), cat: null, dept: "", school: "", sort: "strict", favOnly: false, shown: PAGE};
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -573,6 +573,12 @@ function syncSchools(){
   const list = [...new Set(DATA.rows.filter(r => state.g === "all" || r.g === state.g).map(r => r.school))].sort((a,b) => a.localeCompare(b, "zh-Hant"));
   if (state.school && !list.includes(state.school)) state.school = "";
   $("school").innerHTML = `<option value="">全部學校</option>` + list.map(n => `<option value="${esc(n)}"${n === state.school ? " selected" : ""}>${esc(n)}</option>`).join("");
+  syncDepts();
+}
+function syncDepts(){
+  const list = [...new Set(DATA.rows.filter(r => (state.g === "all" || r.g === state.g) && (!state.school || r.school === state.school)).map(r => r.dept))].sort((a,b) => a.localeCompare(b, "zh-Hant"));
+  if (state.dept && !list.includes(state.dept)) state.dept = "";
+  $("dept").innerHTML = `<option value="">全部科系</option>` + list.map(n => `<option value="${esc(n)}"${n === state.dept ? " selected" : ""}>${esc(n)}</option>`).join("");
 }
 function skipUI(){
   $("skips").innerHTML = SUBJ.map((s,i) => `<label><input type="checkbox" data-skip="${i}"${skip.has(i) ? " checked" : ""}>不考${s}</label>`).join("");
@@ -650,7 +656,7 @@ function favMixHTML(all){
   return `<div class="mix"><span class="chip warn">挑戰 ${c.near}</span><span class="chip">適中 ${c.pass}</span><span class="chip ok">保底 ${c.safe}</span></div><ul>${tips.map(t => `<li>${t}</li>`).join("")}</ul>`;
 }
 function render(){
-  const q = state.q.trim();
+  const q = state.dept;
   const rows = DATA.rows.filter(r => (state.g === "all" || r.g === state.g) && pickOK(r));
   const all = rows.map(evalRow);
   const counts = {safe:0,pass:0,near:0,far:0,wait:0,out:0};
@@ -661,7 +667,7 @@ function render(){
     `<button type="button" class="tile t-wait" data-cat="wait" aria-pressed="${state.cat === "wait"}"><span>${NAME.wait}</span><b>${counts.wait}</b><span>個校系</span></button>`;
   $("sens").innerHTML = sensHTML(rows);
   let list = all;
-  if (q) list = list.filter(e => (e.r.school + e.r.dept).includes(q));
+  if (q) list = list.filter(e => e.r.dept === q);
   if (state.school) list = list.filter(e => e.r.school === state.school);
   if (state.favOnly) list = list.filter(e => favs.has(keyOf(e.r)));
   if (state.cat) list = list.filter(e => e.cat === state.cat);
@@ -844,7 +850,8 @@ document.addEventListener("change", ev => {
     const i = +ev.target.id.slice(2), v = ev.target.value === "" ? null : Math.max(0, Math.min(100, Math.round(+ev.target.value)));
     prs[i] = Number.isFinite(v) ? v : null; ev.target.value = prs[i] ?? ""; store.set("prs", prs); render();
   }
-  else if (ev.target.id === "school") { state.school = ev.target.value; refilter(); }
+  else if (ev.target.id === "school") { state.school = ev.target.value; syncDepts(); refilter(); }
+  else if (ev.target.id === "dept") { state.dept = ev.target.value; refilter(); }
   else if (ev.target.id === "impFile") {
     const f = ev.target.files && ev.target.files[0]; if (!f) return;
     const rd = new FileReader();
@@ -857,7 +864,6 @@ document.addEventListener("change", ev => {
     store.set("skip", [...skip]); skipUI(); refilter();
   }
 });
-$("q").addEventListener("input", ev => { state.q = ev.target.value; refilter(); });
 
 (function staticText(){
   const n = st => DATA.rows.filter(r => r.st === st).length;
