@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="format-detection" content="telephone=no">
+<title>116推甄選校系統 第十版</title>
+<style>
+:root{
+  /* 版面：單欄卡片清單，手機優先；不載入任何外部資源，可離線使用 */
+  --bg:#f3f5f7; --surface:#ffffff; --ink:#18222c; --muted:#5a6672; --line:#dbe1e7; --accent:#1c5a92;
+  --safe:#1d8a4e; --pass:#b47817; --near:#cf5f1e; --far:#7f8a95; --wait:#5567a8;
+  --safe-bg:#e6f4ec; --pass-bg:#fbf1de; --near-bg:#fbe9df; --far-bg:#eceff2; --wait-bg:#e9ecf7;
+  --font-body:"PingFang TC","Noto Sans TC","Microsoft JhengHei","Heiti TC",system-ui,sans-serif;
+  --font-display:"Songti TC","Noto Serif TC","PMingLiU",serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1418; --surface:#182027; --ink:#e5ecf2; --muted:#9daab6; --line:#2a343e; --accent:#74aee3;
+    --safe:#43c07c; --pass:#e3a744; --near:#f08b4d; --far:#8a96a2; --wait:#9aa8e0;
+    --safe-bg:#16301f; --pass-bg:#33280f; --near-bg:#3a2214; --far-bg:#232b33; --wait-bg:#222842;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1418; --surface:#182027; --ink:#e5ecf2; --muted:#9daab6; --line:#2a343e; --accent:#74aee3;
+  --safe:#43c07c; --pass:#e3a744; --near:#f08b4d; --far:#8a96a2; --wait:#9aa8e0;
+  --safe-bg:#16301f; --pass-bg:#33280f; --near-bg:#3a2214; --far-bg:#232b33; --wait-bg:#222842;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.55}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px 48px;display:flex;flex-direction:column;gap:14px}
+h1{font-family:var(--font-display);font-size:1.5rem;line-height:1.3;margin:0;text-wrap:balance}
+h2{font-size:1.1rem;margin:0;text-wrap:balance}
+.lede{color:var(--muted);margin:4px 0 0;font-size:.95rem}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.note{font-size:.88rem;color:var(--muted)}
+.scores{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.sc{display:flex;flex-direction:column;align-items:center;gap:4px}
+.sc label{font-size:.85rem;color:var(--muted)}
+.step{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden;width:100%}
+.step button{flex:0 0 30px;height:40px;border:0;background:var(--bg);color:var(--ink);font-size:1.1rem;cursor:pointer}
+.step input{width:100%;min-width:0;height:40px;border:0;text-align:center;font-size:1.15rem;font-weight:700;background:var(--surface);color:var(--ink);font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+.step input::-webkit-outer-spin-button,.step input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.demo{font-size:.8rem;background:var(--pass-bg);color:var(--pass);border-radius:999px;padding:2px 10px;font-weight:500}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:var(--surface);color:var(--ink);padding:8px 12px;font:inherit;font-size:.9rem;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.search,.sel{flex:1 1 150px;min-width:0;height:40px;border:1px solid var(--line);border-radius:10px;padding:0 12px;font:inherit;background:var(--surface);color:var(--ink)}
+.ghost{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:8px 12px;font:inherit;font-size:.9rem;cursor:pointer}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tile{border:2px solid transparent;border-radius:12px;padding:10px 8px;text-align:center;cursor:pointer;font:inherit;color:var(--ink)}
+.tile b{display:block;font-size:1.6rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.tile span{font-size:.82rem}
+.tile[aria-pressed="true"]{border-color:var(--ink)}
+.t-safe{background:var(--safe-bg)} .t-safe b{color:var(--safe)}
+.t-pass{background:var(--pass-bg)} .t-pass b{color:var(--pass)}
+.t-near{background:var(--near-bg)} .t-near b{color:var(--near)}
+.t-far{background:var(--far-bg)} .t-far b{color:var(--far)}
+.t-wait{grid-column:1/-1;background:var(--wait-bg);display:flex;justify-content:center;align-items:baseline;gap:8px;padding:8px}
+.t-wait b{display:inline;font-size:1.15rem;color:var(--wait)}
+.t-wait span{font-size:.88rem}
+.legend{display:grid;gap:4px;font-size:.86rem;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle}
+.list{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--far);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.card.safe{border-left-color:var(--safe)} .card.pass{border-left-color:var(--pass)} .card.near{border-left-color:var(--near)} .card.wait{border-left-color:var(--wait)}
+.ch{display:flex;gap:10px;align-items:flex-start}
+.ch .nm{flex:1;min-width:0}
+.school{font-size:.85rem;color:var(--muted)}
+.dept{font-size:1.12rem;font-weight:700;line-height:1.35;word-break:break-word}
+.pill{flex:0 0 auto;font-size:.8rem;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.pill.safe{background:var(--safe-bg);color:var(--safe)} .pill.pass{background:var(--pass-bg);color:var(--pass)}
+.pill.near{background:var(--near-bg);color:var(--near)} .pill.far{background:var(--far-bg);color:var(--far)}
+.pill.wait{background:var(--wait-bg);color:var(--wait)}
+.star{flex:0 0 auto;border:0;background:none;font-size:1.35rem;line-height:1;cursor:pointer;color:var(--muted);padding:2px}
+.star[aria-pressed="true"]{color:#e0a100}
+.summary{font-size:.95rem}
+.plan{font-size:.92rem;border-radius:10px;padding:8px 10px;background:var(--near-bg)}
+.plan.far{background:var(--far-bg)}
+.plan b{font-variant-numeric:tabular-nums}
+.chg{font-size:.9rem;border-radius:10px;padding:8px 10px;background:var(--wait-bg)}
+.subj{font-size:.86rem;color:var(--muted)}
+.tag{display:inline-block;font-size:.72rem;font-weight:700;border-radius:6px;padding:0 6px;margin-left:6px;background:var(--wait-bg);color:var(--wait);vertical-align:1px}
+.picks{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.pick{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 14px;font:inherit;font-size:.95rem;min-height:40px;cursor:pointer}
+.pick[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.subj b{color:var(--accent)}
+.plan6 .it{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-left:6px solid var(--far);border-radius:10px;padding:8px 10px;margin-top:8px;background:var(--surface)}
+.plan6 .it.safe{border-left-color:var(--safe)} .plan6 .it.pass{border-left-color:var(--pass)} .plan6 .it.near{border-left-color:var(--near)}
+.plan6 .it .tx{flex:1;min-width:0;font-size:.92rem}
+.plan6 .it .tx b{display:block;font-size:1rem}
+.plan6 .mix{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.plan6 .adv{font-size:.92rem;border-radius:10px;padding:8px 10px;background:var(--wait-bg);margin-top:8px}
+.plan6 .adv.bad{background:var(--near-bg)}
+.skips{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px}
+.skips label{display:flex;align-items:center;gap:6px;font-size:.95rem;min-height:36px}
+.skips input{width:20px;height:20px}
+.sc.off label{color:var(--muted);text-decoration:line-through}
+.sc.off .step{opacity:.45}
+.warn-t{color:var(--near);font-weight:500}
+.card.out{border-left-color:var(--far)}
+.pill.out{background:var(--far-bg);color:var(--far)}
+.linkbtn{border:0;background:none;color:var(--accent);font:inherit;font-size:.88rem;text-decoration:underline;cursor:pointer;padding:0}
+.conds{display:flex;flex-direction:column;gap:10px}
+.cd-top{display:flex;justify-content:space-between;gap:8px;font-size:.92rem}
+.cd-top .lab{font-weight:500}
+.cd-top .res{font-weight:700;white-space:nowrap}
+.res.safe{color:var(--safe)} .res.pass{color:var(--pass)} .res.near{color:var(--near)} .res.far{color:var(--far)}
+.barrow{display:flex;align-items:center;gap:8px;margin:4px 0 2px}
+.barrow .pc{flex:0 0 3.2em;text-align:right;font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{flex:1;height:12px;background:var(--bg);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:999px}
+.bar i.safe{background:var(--safe)} .bar i.pass{background:var(--pass)} .bar i.near{background:var(--near)} .bar i.far{background:var(--far)}
+.cd-cap{display:flex;justify-content:space-between;gap:8px;font-size:.82rem;color:var(--muted);flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:.78rem;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--muted);background:var(--surface)}
+.chip.ok{color:var(--safe);border-color:var(--safe)} .chip.no{color:var(--near);border-color:var(--near)}
+.chip.warn{color:var(--pass);border-color:var(--pass)}
+details{font-size:.9rem}
+summary{cursor:pointer;color:var(--accent);font-weight:500}
+.hist{width:100%;border-collapse:collapse;margin-top:6px;font-variant-numeric:tabular-nums}
+.hist th,.hist td{border-bottom:1px solid var(--line);padding:5px 4px;text-align:right;font-size:.84rem}
+.hist th:first-child,.hist td:first-child{text-align:left}
+.hist td.you{font-weight:700}
+.tablewrap{overflow-x:auto}
+.more{align-self:center}
+.empty{color:var(--muted);text-align:center;padding:16px}
+.guide h3{font-size:1rem;margin:14px 0 4px}
+.guide p,.guide li{font-size:.92rem;max-width:65ch}
+.guide ul{padding-left:1.2em;margin:4px 0}
+a{color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media (max-width:560px){
+  .scores{grid-template-columns:1fr;gap:6px}
+  .sc{flex-direction:row;justify-content:space-between}
+  .sc label{font-size:1rem;color:var(--ink)}
+  .step{width:170px}
+  .step button{flex-basis:48px;height:44px}
+  .step input{height:44px}
+  .tiles{grid-template-columns:repeat(2,1fr)}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+@media print{
+  body{background:#fff}
+  .wrap{max-width:none;padding:0}
+  .noprint,.star,.more{display:none!important}
+  .panel,.card{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>116 推甄選校系統</h1>
+    <p class="lede">輸入統測五科級分，看 116 年各國立校系第一階段篩選的分數夠不夠。第十版（新增：48 個校系、資料齊全度標示、分數用不完的提醒、依歷年波動調整的安全線、各科 PR 選填與 116 超額新制說明）；採計科目已對照 116 年官方初階資料，倍率和名額要等 12 月簡章。這裡顯示的是分數差距，不是錄取機率。</p>
+  </header>
+
+  <section class="panel" aria-labelledby="h-score">
+    <div class="row" style="justify-content:space-between">
+      <h2 id="h-score">你的五科級分</h2>
+      <span class="demo" id="demo">示範分數，請改成你的</span>
+    </div>
+    <div class="scores" id="scores" style="margin-top:10px"></div>
+    <div class="row noprint" style="margin-top:10px;justify-content:space-between">
+      <span class="note">每科 0～15 級分。成績只存在這台裝置。</span>
+      <button class="ghost" id="reset" type="button">恢復示範分數</button>
+    </div>
+    <details class="noprint" style="margin-top:8px">
+      <summary>各科 PR 值（選填，純參考）</summary>
+      <div class="skips" id="prBox"></div>
+      <p class="note" style="margin:6px 0 2px">填模考成績單上的 PR（0～100，可留白）。PR 只用來對照，不會換算成機率，也不影響排序。另外提醒：116 年同級分超額篩選改由各校系自行選定科目——從第一、第二階段參採的統測科目中選最多四科加總，不再一律比五科總級分。各校系比哪幾科要看正式簡章；大方向是偏科的同學在科目對得上的校系較有利。</p>
+    </details>
+    <details class="noprint" id="skipBox" style="margin-top:8px">
+      <summary>116 年可以選考：有不考的科目嗎？</summary>
+      <div class="skips" id="skips"></div>
+      <p class="note" id="skipNote" style="margin:6px 0 0"></p>
+    </details>
+  </section>
+
+  <section class="panel noprint" aria-label="篩選與搜尋">
+    <div class="row">
+      <div class="seg" role="group" aria-label="群別">
+        <button type="button" data-g="all" aria-pressed="true">全部</button>
+        <button type="button" data-g="09" aria-pressed="false">09 商管</button>
+        <button type="button" data-g="21" aria-pressed="false">21 資管</button>
+      </div>
+      <select class="sel" id="school" aria-label="選擇學校"></select>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <input class="search" id="q" type="search" placeholder="搜尋科系，例如：會計、資管" aria-label="搜尋學校或科系">
+      <button class="ghost" id="favOnly" type="button" aria-pressed="false">☆ 只看收藏</button>
+    </div>
+    <div style="margin-top:10px">
+      <div class="row" style="justify-content:space-between"><b style="font-size:.95rem">點選你有把握的科目，只看採計到的校系</b><button class="linkbtn" id="pickClear" type="button">清除</button></div>
+      <div class="picks" id="picks" role="group" aria-label="自由點選採計科目"></div>
+      <div class="seg" id="pickMode" role="group" aria-label="比對方式" style="margin-top:8px">
+        <button type="button" data-pm="any" aria-pressed="true">採計其中任一科</button>
+        <button type="button" data-pm="all" aria-pressed="false">每科都採計</button>
+        <button type="button" data-pm="only" aria-pressed="false">只採計這些科</button>
+      </div>
+      <p class="note" id="pickNote" style="margin:6px 0 0">不點任何科目＝不限制。「採計」是 116 年第一、二階段會用到的科目。</p>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <div class="seg" role="group" aria-label="排序">
+        <button type="button" data-sort="strict" aria-pressed="true">篩選較嚴的在前</button>
+        <button type="button" data-sort="margin" aria-pressed="false">分數空間大的在前</button>
+        <button type="button" data-sort="fit" aria-pressed="false">科目對得上的在前</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel plan6 noprint" aria-labelledby="h-plan">
+    <h2 id="h-plan">幫我排 6 個志願</h2>
+    <p class="note" style="margin:4px 0 8px">依你上面的分數、群別和點選的科目，自動排出搭配。不會改動你的收藏。</p>
+    <div class="seg" id="planMode" role="group" aria-label="搭配方式">
+      <button type="button" data-plm="safe3" aria-pressed="true">求穩：1 挑戰＋2 適中＋3 保底</button>
+      <button type="button" data-plm="bal" aria-pressed="false">均衡：2 挑戰＋2 適中＋2 保底</button>
+    </div>
+    <div id="planOut"></div>
+    <div class="row" style="margin-top:10px"><button class="ghost" id="planFav" type="button">全部加入收藏</button></div>
+    <details style="margin-top:10px"><summary>你的收藏搭配得好不好？</summary><div id="favMix"></div></details>
+  </section>
+  <section class="panel" aria-labelledby="h-sum">
+    <h2 id="h-sum">結果分成四類<span class="noprint">（點選可只看該類）</span></h2>
+    <div class="tiles" id="tiles" style="margin-top:10px"></div>
+    <details class="noprint" style="margin-top:10px">
+      <summary>這四類怎麼分？</summary>
+      <div class="legend">
+        <div><i style="background:var(--safe)"></i>穩穩達標：每一項都高過 116 預估範圍的上限，門檻就算上升也還夠。</div>
+        <div><i style="background:var(--pass)"></i>達標但不穩：都達到 116 預估，但有一項還在範圍內，門檻上升就可能不夠。</div>
+        <div><i style="background:var(--near)"></i>差一點：還沒全部達到 116 預估，最少再補 1～2 級分就達到。</div>
+        <div><i style="background:var(--far)"></i>還有距離：最少要再補 3 級分以上，才全部達到 116 預估。</div>
+        <div><i style="background:var(--wait)"></i>還不能判斷：沒有歷年門檻可以推估，或 116 年的資料裡找不到這個校系。</div>
+      </div>
+      <p class="note" style="margin:8px 0 0">長條：116 預估需要的分數＝100%，你的分數最多畫到 100%；多出幾分直接寫在右上方。</p>
+    </details>
+    <details class="noprint" id="sensBox" style="margin-top:8px">
+      <summary>哪一科多 1 級分最有用？不考某一科會少幾個校系？</summary>
+      <div id="sens"></div>
+    </details>
+  </section>
+
+  <p class="note" id="info" style="margin:0"></p>
+  <section class="list" id="list" aria-live="polite"></section>
+  <button class="ghost more" id="more" type="button" hidden></button>
+  <button class="ghost more noprint" id="print" type="button">列印目前清單／存成 PDF</button>
+
+  <section class="panel noprint">
+    <details>
+      <summary id="extraSum">其他 116 年招收 09 商管、21 資管的國立校系</summary>
+      <p class="note" style="margin:8px 0 0">這些校系在 116 年的資料裡有招生，但這個系統沒有它們的歷年門檻，只列採計科目，不判斷分數夠不夠。</p>
+      <div class="tablewrap"><table class="hist" id="extra"></table></div>
+    </details>
+  </section>
+
+  <section class="panel guide">
+    <details>
+      <summary>給家長與老師：這個系統怎麼算</summary>
+      <h3>116 採計科目</h3>
+      <ul>
+        <li>依技專校院招生委員會聯合會「116 學年度甄選入學統測選採科目查詢系統（初階版）」的整理檔，115 年 11 月 10 日製表。<span id="g-match"></span></li>
+        <li>初階資料只有科目，沒有倍率、名額，也看不出哪幾科會合計。這些要等 115 年 12 月簡章公布，屆時門檻的算法可能還會變。</li>
+      </ul>
+      <h3>116 預估分數怎麼來</h3>
+      <ul>
+        <li>科目和 115 年相同、又有 113～115 年實際門檻的校系：115 年占六成、114 年占四成。用同樣方法拿 113、114 年去推 115 年，09 商管平均差 0.9 級分，21 資管平均差 2.5 級分。</li>
+        <li>科目相同、但沒有歷年資料的校系：沿用前份報告的 116 預估，沒有逐年資料可以檢查，範圍放寬。</li>
+      </ul>
+      <h3>116 年改了科目的校系怎麼估</h3>
+      <ul>
+        <li>只少採科目：假設倍率和來報名的人都不變。合計的項目少一科，就找「留下的科目要幾分，篩掉的人數比例才一樣」；整個項目被拿掉，它篩掉的比例併到下一個項目。用 25 萬名模擬考生計算，卡片上標「換算」。</li>
+        <li>有新增科目：新科目沒有歷年門檻，用這個系其他科目的門檻水準、加上各科平均的高低差來估，卡片上標「粗估」，範圍一律上下 3 級分。把現有 204 個單科項目輪流遮住來測，平均差 1.5 級分，97% 落在上下 3 級分內。</li>
+        <li>這兩種都只是先給一個參考，簡章公布倍率後要重新確認。</li>
+      </ul>
+      <h3>預估範圍怎麼訂</h3>
+      <ul>
+        <li>每一項依它自己 113～115 年的變動：每科變動不超過 1 級分，範圍是每科上下 1 級分；不超過 2，上下 2；更大，上下 3。</li>
+        <li>21 資管、沒有歷年資料、報名人數少的校系，再放寬 1 級分（最多每科上下 3）。「換算」的項目也再放寬 1 級分。</li>
+        <li>回頭檢查 115 年：09 商管歷年穩定的項目，每科上下 1 級分的範圍包含了 90% 的實際門檻。21 資管和報名人數少的校系，範圍包含的比例較低，只能當參考。</li>
+        <li>兩科以上合計的項目，範圍依科數放大，例如兩科合計、每科上下 1 級分，就是合計上下 2 級分。</li>
+      </ul>
+      <h3>選考</h3>
+      <ul>
+        <li>116 年統測可以選考。校系第一階段或第二階段採計的科目，只要有一科沒報考，或有兩科以上 0 分，就不能參加第一階段篩選。</li>
+        <li>在「有不考的科目嗎？」勾選後，採計那一科的校系會從清單和統計中排除。單群考生至少要考 2 科，其中至少 1 科專業科目。</li>
+      </ul>
+      <h3>補分建議怎麼算</h3>
+      <ul>
+        <li>把各科一級分一級分往上加，找出加總最少、就能讓每一項都達到 116 預估的補法；加總相同時，優先列每科加得比較平均的那一種。</li>
+        <li>補分是對照 116 預估分數。卡片同時會說明你的分數是不是還在可能範圍內：在範圍內，門檻下降也有機會；低於範圍下限，主要要靠補分。</li>
+        <li>合計的項目常有不只一種補法（例如英文＋數學合計差 1 分，補英文或補數學都可以），卡片只列其中一種。</li>
+      </ul>
+      <h3>其他欄位</h3>
+      <ul>
+        <li>歷年回放：用你的分數對照 113、114、115 年的實際門檻，看哪幾年會過。只有科目沒變的校系才顯示。</li>
+        <li>篩選嚴格度：用模擬的考生分數，算「全部條件同時達到的人有多少」，在同一群裡比較；最嚴的四分之一標「較嚴」，最寬的四分之一標「較寬」。依 115 年的科目計算，不含同級分超額。</li>
+        <li>報名人數少：所有條件同時達到的人很多，表示門檻主要看當年有多少人報名，起伏可能很大。</li>
+        <li>安全線（穩穩達標的門檻）：歷年門檻跳動大的校系，需要高出更多分才算「穩穩達標」；跳動小的維持原本的差距。這是用該校系自己的歷史波動算的，不是一律加一樣多。</li>
+        <li>資料齊全度：「近三年資料齊全」表示 113～115 年門檻都查得到，參考性較高；「歷年資料較少」表示多半只有近一年，估得較粗；「採計可能有變動」表示比對官方初階資料時發現科目可能調整，要以 12 月簡章為準。</li>
+        <li>PR 值：由你自行填入模考成績單上的數字，只做對照顯示，不換算成機率、不影響任何排序或分類。</li>
+        <li>同級分超額：116 年起由各校系自行選定比序科目——必須從第一、第二階段參採的統測科目中選取，最多四科加總；因此不是一律比五科總級分，也不一定等於第一階段採計科目的總分。各校系選哪幾科以正式簡章為準；大方向是偏科的同學在科目對得上的校系較佔優勢，可搭配「科目對得上的在前」排序使用。</li>
+        <li>分數用不完的提醒：每一項都比需要的多 3 級分以上才會出現，只是提醒可以往上挑，不是要你放棄穩的校系。</li>
+      </ul>
+      <h3>沒有算進來的</h3>
+      <ul>
+        <li>第二階段甄試、同級分超額比序、各系 116 年的名額與倍率變化、報名人數變化。選考之後，來報名的人也可能和往年不同。</li>
+        <li>剛好達到要求時，如果同分的人太多，還要比篩選科目的級分總和，請看當年簡章。</li>
+        <li>所以這裡只能說「分數夠不夠過第一階段」，不能說錄取機率。</li>
+      </ul>
+      <h3>6 個志願怎麼搭配</h3>
+      <ul>
+        <li>建議的起點：2 個「差一點」或「達標但不穩」（挑戰）、2 個「達標但不穩」（適中）、2 個「穩穩達標」（保底）。</li>
+        <li>想求穩：把 1 個挑戰換成保底。模擬（114、115 年實際門檻回測）中，這樣平均多過約 0.2 個志願，至少過 1 個的機會不變。保底最多放 3 個，再多只會選到太容易的校系，等於高分低就。</li>
+        <li>「點選科目」只是幫你看有把握的科目被哪些校系採計，不會改變上面的排序。模擬顯示：已經看每一關的分數差距之後，再額外偏重強科，沒有穩定的好處。</li>
+        <li>116 年改了採計科目的校系（少採或新增科目），最高只列到「達標但不穩」，不會標成「穩穩達標」。回測中，這類校系前一年看起來有 90% 以上把握的，實際只有約 80～91% 過關，比科目沒變的校系（約 98%）低很多。</li>
+        <li>這些結果來自模擬學生和第一階段級分門檻，不是真實錄取率。</li>
+      </ul>
+      <h3>第七版改了什麼（第八、九版另加：自由點選採計科目、6 志願搭配建議、幫我排 6 個志願）</h3>
+      <ul>
+        <li>逐系對照 116 年採計科目。115 年用五科篩選的 5 個校系，改用 116 年的四科換算後重新判斷。</li>
+        <li>改了科目的校系，卡片會寫少採或新增哪一科，並標出哪些分數是換算或粗估。</li>
+        <li>每張卡片列出 116 年第一、二階段採計的科目；新增「不考的科目」設定。</li>
+        <li>另外列出這個系統沒有歷年門檻、但 116 年有招生的國立校系。</li>
+      </ul>
+      <p class="note">資料：四技二專甄選委員會 113～115 年第一階段篩選資料、前份 116 預估報告、113～115 國立校系分差資料、116 統測選採科目初階查詢整理檔。正式資訊請以<a href="https://info2.jctv.ntut.edu.tw/ugctquery" target="_blank" rel="noopener">官方統測選採科目查詢系統</a>與 116 簡章為準。</p>
+    </details>
+  </section>
+</div>
+
+<script>
+const DATA = {"rows":[{"g":"09","school":"中興大學","dept":"應用經濟系","q":1,"src":"hist","stab":"穩定","low":null,"p":0.00761,"tier":"較嚴","s1":[1,2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1,2],"need":28,"lo":26,"hi":30,"y":[29,29,28],"m":"k"},{"s":[3,4],"need":30,"lo":27,"hi":30,"y":[28,29,30],"m":"k"}],"cr":"B"},{"g":"09","school":"成功大學","dept":"會計系","q":2,"src":"est","stab":null,"low":null,"p":0.00564,"tier":"較嚴","s1":[1,2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1,2],"need":29,"lo":25,"hi":30,"y":null,"m":"k"},{"s":[3,4],"need":30,"lo":26,"hi":30,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"臺北科技大學","dept":"資訊與財金管理系","q":19,"src":"hist","stab":"穩定","low":null,"p":0.02339,"tier":"較嚴","s1":[1,2,3,4],"s2":[1,2,3,4],"rem":[0],"add":[],"oc":[{"s":[0,1,2],"need":38,"y":[42,39,38]},{"s":[3],"need":14,"y":[14,14,14]},{"s":[4],"need":14,"y":[13,13,14]}],"st":"drop","c":[{"s":[1,2],"need":26,"lo":22,"hi":30,"y":null,"m":"x"},{"s":[3],"need":14,"lo":12,"hi":15,"y":[14,14,14],"m":"k"},{"s":[4],"need":14,"lo":12,"hi":15,"y":[13,13,14],"m":"k"}],"cr":"D"},{"g":"09","school":"中興大學","dept":"企業管理系","q":2,"src":"est","stab":null,"low":null,"p":0.01001,"tier":"較嚴","s1":[1,2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1,2],"need":28,"lo":24,"hi":30,"y":null,"m":"k"},{"s":[3],"need":14,"lo":12,"hi":15,"y":null,"m":"k"},{"s":[4],"need":15,"lo":13,"hi":15,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"臺灣科技大學","dept":"企業管理系","q":26,"src":"hist","stab":"穩定","low":null,"p":0.03096,"tier":"較嚴","s1":[1,2,3,4],"s2":[1,2,3,4],"rem":[0],"add":[],"oc":[{"s":[0,1,2],"need":39,"y":[41,39,39]},{"s":[3,4],"need":27,"y":[26,27,27]}],"st":"drop","c":[{"s":[1,2],"need":27,"lo":23,"hi":30,"y":null,"m":"x"},{"s":[3,4],"need":27,"lo":25,"hi":29,"y":[26,27,27],"m":"k"}],"cr":"D"},{"g":"09","school":"臺北科技大學","dept":"工業工程與管理系","q":30,"src":"est","stab":null,"low":null,"p":0.03584,"tier":"較嚴","s1":[1,2,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1,2],"need":27,"lo":23,"hi":30,"y":null,"m":"k"},{"s":[4],"need":13,"lo":11,"hi":15,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"臺北科技大學","dept":"經營管理系","q":23,"src":"hist","stab":"穩定","low":null,"p":0.02994,"tier":"較嚴","s1":[1,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":14,"lo":11,"hi":15,"y":[14,13,14],"m":"k"},{"s":[3,4],"need":27,"lo":25,"hi":29,"y":[26,27,27],"m":"k"}],"cr":"B"},{"g":"09","school":"雲林科技大學","dept":"國際管理學士學位學程","q":8,"src":"hist","stab":"穩定","low":null,"p":0.04156,"tier":"較嚴","s1":[1,3],"s2":[0,1,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":14,"lo":12,"hi":15,"y":[14,13,14],"m":"k"},{"s":[3],"need":13,"lo":11,"hi":15,"y":[12,13,13],"m":"k"}],"cr":"B"},{"g":"09","school":"臺中科技大學","dept":"財政稅務系","q":51,"src":"est","stab":null,"low":null,"p":0.21982,"tier":"中等","s1":[1,2,4],"s2":[1,2,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1,2],"need":17,"lo":13,"hi":21,"y":null,"m":"k"},{"s":[4],"need":11,"lo":9,"hi":13,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"屏東大學","dept":"會計系","q":49,"src":"est","stab":null,"low":"偏低","p":0.47617,"tier":"較寬","s1":[3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[3,4],"need":17,"lo":11,"hi":23,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"雲林科技大學","dept":"會計系","q":32,"src":"hist","stab":"變動大","low":null,"p":0.09097,"tier":"中等","s1":[1,2,3,4],"s2":[1,2,3,4],"rem":[0],"add":[],"oc":[{"s":[0,1,2],"need":29,"y":[35,28,30]},{"s":[3,4],"need":26,"y":[26,26,26]}],"st":"drop","c":[{"s":[1,2],"need":20,"lo":14,"hi":26,"y":null,"m":"x"},{"s":[3,4],"need":26,"lo":24,"hi":28,"y":[26,26,26],"m":"k"}],"cr":"D"},{"g":"09","school":"澎湖科技大學","dept":"餐旅管理系","q":1,"src":"est","stab":null,"low":"偏低","p":0.46736,"tier":"較寬","s1":[0,4],"s2":[0,4],"rem":[3],"add":[4],"oc":[{"s":[0],"need":7,"y":null},{"s":[3],"need":7,"y":null}],"st":"add","c":[{"s":[0],"need":7,"lo":4,"hi":10,"y":null,"m":"k"},{"s":[4],"need":7,"lo":4,"hi":10,"y":null,"m":"i"}],"cr":"D"},{"g":"09","school":"臺北商業大學","dept":"財務金融系","q":11,"src":"est","stab":null,"low":null,"p":0.02158,"tier":"較嚴","s1":[1,2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1,2],"need":27,"lo":23,"hi":30,"y":null,"m":"k"},{"s":[3,4],"need":28,"lo":24,"hi":30,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"中正大學","dept":"經濟系","q":2,"src":"hist","stab":"穩定","low":null,"p":0.01324,"tier":"較嚴","s1":[0,1,2,4],"s2":[1,2,4],"rem":[3],"add":[],"oc":[{"s":[0],"need":12,"y":[14,13,12]},{"s":[1],"need":14,"y":[14,13,14]},{"s":[2],"need":13,"y":[14,13,13]},{"s":[3,4],"need":28,"y":[26,27,28]}],"st":"drop","c":[{"s":[0],"need":12,"lo":8,"hi":15,"y":[14,13,12],"m":"k"},{"s":[1],"need":14,"lo":10,"hi":15,"y":[14,13,14],"m":"k"},{"s":[2],"need":13,"lo":11,"hi":15,"y":[14,13,13],"m":"k"},{"s":[4],"need":15,"lo":13,"hi":15,"y":null,"m":"x"}],"cr":"D"},{"g":"09","school":"澎湖科技大學","dept":"觀光休閒系","q":20,"src":"est","stab":null,"low":"低","p":0.73091,"tier":"較寬","s1":[0,3],"s2":[0,3],"rem":[4],"add":[],"oc":[{"s":[0],"need":5,"y":null},{"s":[3,4],"need":7,"y":null}],"st":"drop","c":[{"s":[0],"need":5,"lo":2,"hi":8,"y":null,"m":"k"},{"s":[3],"need":3,"lo":1,"hi":6,"y":null,"m":"x"}],"cr":"D"},{"g":"09","school":"臺灣海洋大學","dept":"海洋經營管理學士學位學程","q":2,"src":"est","stab":null,"low":null,"p":0.09098,"tier":"中等","s1":[1,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":11,"lo":9,"hi":13,"y":null,"m":"k"},{"s":[3,4],"need":25,"lo":21,"hi":29,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"澎湖科技大學","dept":"航運管理系","q":28,"src":"est","stab":null,"low":"低","p":0.83132,"tier":"較寬","s1":[0,3],"s2":[0,3],"rem":[1,4],"add":[0],"oc":[{"s":[1],"need":2,"y":null},{"s":[3,4],"need":8,"y":null}],"st":"add","c":[{"s":[3],"need":3,"lo":1,"hi":6,"y":null,"m":"x"},{"s":[0],"need":3,"lo":1,"hi":6,"y":null,"m":"i"}],"cr":"D"},{"g":"09","school":"臺北商業大學","dept":"會計資訊系","q":18,"src":"hist","stab":"穩定","low":null,"p":0.03385,"tier":"較嚴","s1":[1,2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1,2],"need":26,"lo":23,"hi":29,"y":[27,25,26],"m":"k"},{"s":[3,4],"need":27,"lo":25,"hi":29,"y":[26,26,27],"m":"k"}],"cr":"B"},{"g":"09","school":"高雄科技大學","dept":"金融資訊系","q":14,"src":"est","stab":null,"low":null,"p":0.09733,"tier":"中等","s1":[1,2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1,2],"need":20,"lo":16,"hi":24,"y":null,"m":"k"},{"s":[3],"need":12,"lo":10,"hi":14,"y":null,"m":"k"},{"s":[4],"need":12,"lo":10,"hi":14,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"臺北商業大學","dept":"財政稅務系","q":23,"src":"est","stab":null,"low":null,"p":0.04965,"tier":"較嚴","s1":[1,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":12,"lo":10,"hi":14,"y":null,"m":"k"},{"s":[3],"need":13,"lo":11,"hi":15,"y":null,"m":"k"},{"s":[4],"need":13,"lo":11,"hi":15,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"彰化師範大學","dept":"財務金融技術系","q":15,"src":"hist","stab":"穩定","low":null,"p":0.05818,"tier":"較嚴","s1":[1,2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1,2],"need":25,"lo":23,"hi":27,"y":[27,26,25],"m":"k"},{"s":[3,4],"need":25,"lo":22,"hi":28,"y":[25,26,25],"m":"k"}],"cr":"B"},{"g":"09","school":"臺灣海洋大學","dept":"航運管理系","q":3,"src":"hist","stab":"穩定","low":null,"p":0.05223,"tier":"較嚴","s1":[1,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":14,"lo":11,"hi":15,"y":[14,13,14],"m":"k"},{"s":[4],"need":12,"lo":9,"hi":15,"y":[12,13,12],"m":"k"}],"cr":"B"},{"g":"09","school":"高雄科技大學","dept":"財務管理系","q":19,"src":"est","stab":null,"low":null,"p":0.05941,"tier":"較嚴","s1":[2,4],"s2":[1,2,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[2],"need":13,"lo":11,"hi":15,"y":null,"m":"k"},{"s":[4],"need":13,"lo":11,"hi":15,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"臺北商業大學","dept":"國際商務系","q":26,"src":"hist","stab":"穩定","low":null,"p":0.03563,"tier":"較嚴","s1":[1,2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":14,"lo":12,"hi":15,"y":[14,13,14],"m":"k"},{"s":[2],"need":11,"lo":9,"hi":13,"y":[12,11,11],"m":"k"},{"s":[3],"need":11,"lo":9,"hi":13,"y":[12,12,11],"m":"k"},{"s":[4],"need":12,"lo":10,"hi":14,"y":[11,11,12],"m":"k"}],"cr":"B"},{"g":"09","school":"臺北商業大學","dept":"企業管理系","q":18,"src":"hist","stab":"穩定","low":null,"p":0.06303,"tier":"較嚴","s1":[3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[3],"need":13,"lo":11,"hi":15,"y":[13,13,13],"m":"k"},{"s":[4],"need":14,"lo":12,"hi":15,"y":[13,13,14],"m":"k"}],"cr":"B"},{"g":"09","school":"雲林科技大學","dept":"工業工程與管理系","q":31,"src":"hist","stab":"穩定","low":null,"p":0.09129,"tier":"中等","s1":[0,3],"s2":[0,2,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":11,"lo":9,"hi":13,"y":[11,11,11],"m":"k"},{"s":[3],"need":13,"lo":11,"hi":15,"y":[13,13,13],"m":"k"}],"cr":"B"},{"g":"09","school":"高雄科技大學","dept":"財政稅務系","q":29,"src":"hist","stab":"穩定","low":null,"p":0.09305,"tier":"中等","s1":[0,4],"s2":[2,3,4],"rem":[1],"add":[],"oc":[{"s":[0],"need":10,"y":[11,11,10]},{"s":[1],"need":11,"y":[10,11,11]},{"s":[4],"need":12,"y":[11,12,12]}],"st":"drop","c":[{"s":[0],"need":10,"lo":8,"hi":12,"y":[11,11,10],"m":"k"},{"s":[4],"need":14,"lo":11,"hi":15,"y":null,"m":"x"}],"cr":"D"},{"g":"09","school":"雲林科技大學","dept":"企業管理系","q":19,"src":"hist","stab":"穩定","low":null,"p":0.05664,"tier":"較嚴","s1":[0,2,3,4],"s2":[0,2,3,4],"rem":[1],"add":[],"oc":[{"s":[0],"need":10,"y":[12,11,10]},{"s":[1],"need":11,"y":[12,12,11]},{"s":[2],"need":11,"y":[12,11,11]},{"s":[3,4],"need":25,"y":[24,25,25]}],"st":"drop","c":[{"s":[0],"need":10,"lo":7,"hi":13,"y":[12,11,10],"m":"k"},{"s":[2],"need":13,"lo":11,"hi":15,"y":null,"m":"x"},{"s":[3,4],"need":25,"lo":23,"hi":27,"y":[24,25,25],"m":"k"}],"cr":"D"},{"g":"09","school":"雲林科技大學","dept":"財務金融系","q":31,"src":"hist","stab":"小幅波動","low":null,"p":0.04376,"tier":"較嚴","s1":[2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[2],"need":12,"lo":9,"hi":15,"y":[14,13,11],"m":"k"},{"s":[3],"need":12,"lo":10,"hi":14,"y":[13,13,12],"m":"k"},{"s":[4],"need":14,"lo":12,"hi":15,"y":[13,13,14],"m":"k"}],"cr":"B"},{"g":"09","school":"高雄科技大學","dept":"金融系","q":44,"src":"hist","stab":"穩定","low":null,"p":0.07022,"tier":"中等","s1":[0,1,4],"s2":[1,2,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":11,"lo":9,"hi":13,"y":[12,11,11],"m":"k"},{"s":[1],"need":12,"lo":9,"hi":15,"y":[12,11,12],"m":"k"},{"s":[4],"need":12,"lo":10,"hi":14,"y":[12,12,12],"m":"k"}],"cr":"B"},{"g":"09","school":"臺中科技大學","dept":"應用統計系","q":13,"src":"est","stab":null,"low":null,"p":0.18788,"tier":"中等","s1":[2,3,4],"s2":[2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[2],"need":11,"lo":9,"hi":13,"y":null,"m":"k"},{"s":[3,4],"need":19,"lo":15,"hi":23,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"臺中教育大學","dept":"國際企業系","q":4,"src":"est","stab":null,"low":null,"p":0.08782,"tier":"中等","s1":[0,1,3,4],"s2":[0,1,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":10,"lo":8,"hi":12,"y":null,"m":"k"},{"s":[1],"need":8,"lo":6,"hi":10,"y":null,"m":"k"},{"s":[3],"need":12,"lo":10,"hi":14,"y":null,"m":"k"},{"s":[4],"need":12,"lo":10,"hi":14,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"高雄科技大學","dept":"國際企業系","q":18,"src":"hist","stab":"小幅波動","low":null,"p":0.06209,"tier":"較嚴","s1":[0,1,3],"s2":[0,1,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":10,"lo":7,"hi":13,"y":[12,11,10],"m":"k"},{"s":[1],"need":13,"lo":11,"hi":15,"y":[13,12,13],"m":"k"},{"s":[3],"need":12,"lo":9,"hi":15,"y":[12,13,11],"m":"k"}],"cr":"B"},{"g":"09","school":"宜蘭大學","dept":"應用經濟與管理系","q":2,"src":"hist","stab":"穩定","low":null,"p":0.17823,"tier":"中等","s1":[0,3],"s2":[3,4],"rem":[4],"add":[0],"oc":[{"s":[3,4],"need":24,"y":[24,24,24]}],"st":"add","c":[{"s":[3],"need":13,"lo":11,"hi":15,"y":null,"m":"x"},{"s":[0],"need":11,"lo":8,"hi":14,"y":null,"m":"i"}],"cr":"D"},{"g":"09","school":"高雄科技大學","dept":"企業管理系","q":14,"src":"est","stab":null,"low":null,"p":0.12083,"tier":"中等","s1":[0,3],"s2":[0,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":11,"lo":9,"hi":13,"y":null,"m":"k"},{"s":[3],"need":12,"lo":10,"hi":14,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"臺中科技大學","dept":"財務金融系","q":53,"src":"hist","stab":"小幅波動","low":null,"p":0.11188,"tier":"中等","s1":[2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[2],"need":10,"lo":7,"hi":13,"y":[13,11,10],"m":"k"},{"s":[3],"need":11,"lo":9,"hi":13,"y":[11,12,11],"m":"k"},{"s":[4],"need":12,"lo":10,"hi":14,"y":[12,12,12],"m":"k"}],"cr":"B"},{"g":"09","school":"高雄科技大學","dept":"工業工程與管理系","q":17,"src":"hist","stab":"穩定","low":null,"p":0.08274,"tier":"中等","s1":[4],"s2":[1,4],"rem":[0,2,3],"add":[4],"oc":[{"s":[2],"need":11,"y":[12,11,11]},{"s":[0],"need":11,"y":[11,11,11]},{"s":[3],"need":12,"y":[12,12,12]}],"st":"add","c":[{"s":[4],"need":12,"lo":9,"hi":15,"y":null,"m":"i"}],"cr":"D"},{"g":"09","school":"屏東大學","dept":"行銷與流通管理系","q":13,"src":"hist","stab":"穩定","low":"偏低","p":0.33886,"tier":"較寬","s1":[3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[3,4],"need":20,"lo":16,"hi":24,"y":[20,21,20],"m":"k"}],"cr":"B"},{"g":"09","school":"勤益科技大學","dept":"行銷與流通管理系","q":35,"src":"est","stab":null,"low":null,"p":0.17463,"tier":"中等","s1":[0,3,4],"s2":[0,1,3,4],"rem":[1,2],"add":[4],"oc":[{"s":[0],"need":10,"y":null},{"s":[1,2],"need":18,"y":null},{"s":[3],"need":10,"y":null}],"st":"add","c":[{"s":[0],"need":10,"lo":8,"hi":12,"y":null,"m":"k"},{"s":[3],"need":10,"lo":8,"hi":12,"y":null,"m":"k"},{"s":[4],"need":10,"lo":7,"hi":13,"y":null,"m":"i"}],"cr":"D"},{"g":"09","school":"高雄科技大學","dept":"文化創意產業系","q":10,"src":"est","stab":null,"low":null,"p":0.16141,"tier":"中等","s1":[0,3,4],"s2":[0,3,4],"rem":[1],"add":[4],"oc":[{"s":[0,1],"need":22,"y":null},{"s":[3],"need":10,"y":null}],"st":"add","c":[{"s":[0],"need":12,"lo":9,"hi":15,"y":null,"m":"x"},{"s":[3],"need":10,"lo":8,"hi":12,"y":null,"m":"k"},{"s":[4],"need":11,"lo":8,"hi":14,"y":null,"m":"i"}],"cr":"D"},{"g":"09","school":"高雄科技大學","dept":"風險管理與保險系","q":14,"src":"hist","stab":"穩定","low":null,"p":0.09924,"tier":"中等","s1":[0,2,3],"s2":[0,2,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":11,"lo":8,"hi":14,"y":[11,11,11],"m":"k"},{"s":[2],"need":11,"lo":8,"hi":14,"y":[11,11,11],"m":"k"},{"s":[3],"need":11,"lo":9,"hi":13,"y":[11,11,11],"m":"k"}],"cr":"B"},{"g":"09","school":"高雄科技大學","dept":"運籌管理系","q":36,"src":"hist","stab":"變動大","low":null,"p":0.22931,"tier":"中等","s1":[1,2,4],"s2":[1,2,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1,2],"need":19,"lo":12,"hi":26,"y":[23,15,21],"m":"k"},{"s":[4],"need":10,"lo":8,"hi":12,"y":[9,10,10],"m":"k"}],"cr":"B"},{"g":"09","school":"高雄科技大學","dept":"航運管理系","q":36,"src":"hist","stab":"穩定","low":null,"p":0.10287,"tier":"中等","s1":[0,1,3,4],"s2":[1,4],"rem":[],"add":[0],"oc":[{"s":[1],"need":12,"y":[11,11,12]},{"s":[4],"need":10,"y":[9,10,10]},{"s":[3],"need":11,"y":[11,11,11]}],"st":"add","c":[{"s":[1],"need":12,"lo":10,"hi":14,"y":[11,11,12],"m":"k"},{"s":[4],"need":10,"lo":8,"hi":12,"y":[9,10,10],"m":"k"},{"s":[3],"need":11,"lo":9,"hi":13,"y":[11,11,11],"m":"k"},{"s":[0],"need":10,"lo":7,"hi":13,"y":null,"m":"i"}],"cr":"D"},{"g":"09","school":"虎尾科技大學","dept":"企業管理系","q":48,"src":"est","stab":null,"low":null,"p":0.17949,"tier":"中等","s1":[0,3],"s2":[0,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":10,"lo":8,"hi":12,"y":null,"m":"k"},{"s":[3],"need":11,"lo":9,"hi":13,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"高雄餐旅大學","dept":"航空暨運輸服務管理系","q":4,"src":"est","stab":null,"low":null,"p":0.17025,"tier":"中等","s1":[0,1,2,4],"s2":[0,1,2,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0,1,2],"need":32,"lo":26,"hi":38,"y":null,"m":"k"},{"s":[4],"need":10,"lo":8,"hi":12,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"勤益科技大學","dept":"健康產業科技研發與管理系","q":10,"src":"est","stab":null,"low":null,"p":0.21715,"tier":"中等","s1":[0,3,4],"s2":[0,3,4],"rem":[],"add":[4],"oc":[{"s":[0],"need":10,"y":null},{"s":[3],"need":10,"y":null}],"st":"add","c":[{"s":[0],"need":10,"lo":8,"hi":12,"y":null,"m":"k"},{"s":[3],"need":10,"lo":8,"hi":12,"y":null,"m":"k"},{"s":[4],"need":10,"lo":7,"hi":13,"y":null,"m":"i"}],"cr":"D"},{"g":"09","school":"屏東大學","dept":"企業管理系","q":16,"src":"hist","stab":"穩定","low":"偏低","p":0.33886,"tier":"較寬","s1":[3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[3,4],"need":20,"lo":16,"hi":24,"y":[20,20,20],"m":"k"}],"cr":"B"},{"g":"09","school":"高雄科技大學","dept":"行銷與流通管理系","q":40,"src":"est","stab":null,"low":null,"p":0.17081,"tier":"中等","s1":[1,2,4],"s2":[1,2,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[2],"need":10,"lo":8,"hi":12,"y":null,"m":"k"},{"s":[1],"need":9,"lo":7,"hi":11,"y":null,"m":"k"},{"s":[4],"need":10,"lo":8,"hi":12,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"臺中科技大學","dept":"企業管理系","q":26,"src":"hist","stab":"穩定","low":null,"p":0.17853,"tier":"中等","s1":[3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[4],"need":10,"lo":7,"hi":13,"y":[10,10,10],"m":"k"},{"s":[3],"need":12,"lo":10,"hi":14,"y":[12,12,12],"m":"k"}],"cr":"B"},{"g":"09","school":"聯合大學","dept":"經營管理系","q":5,"src":"hist","stab":"穩定","low":null,"p":0.15732,"tier":"中等","s1":[0,3,4],"s2":[0,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":11,"lo":9,"hi":13,"y":[11,11,11],"m":"k"},{"s":[3,4],"need":21,"lo":18,"hi":24,"y":[20,22,21],"m":"k"}],"cr":"B"},{"g":"09","school":"勤益科技大學","dept":"資訊管理系","q":15,"src":"est","stab":null,"low":null,"p":0.14824,"tier":"中等","s1":[0,2,3,4],"s2":[0,2,3,4],"rem":[],"add":[2],"oc":[{"s":[0],"need":10,"y":null},{"s":[4],"need":10,"y":null},{"s":[3],"need":11,"y":null}],"st":"add","c":[{"s":[0],"need":10,"lo":8,"hi":12,"y":null,"m":"k"},{"s":[4],"need":10,"lo":8,"hi":12,"y":null,"m":"k"},{"s":[3],"need":11,"lo":9,"hi":13,"y":null,"m":"k"},{"s":[2],"need":9,"lo":6,"hi":12,"y":null,"m":"i"}],"cr":"D"},{"g":"09","school":"高雄科技大學","dept":"會計資訊系","q":51,"src":"hist","stab":"變動大","low":null,"p":0.16009,"tier":"中等","s1":[0,4],"s2":[3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":9,"lo":5,"hi":13,"y":[12,11,7],"m":"k"},{"s":[4],"need":12,"lo":9,"hi":15,"y":[10,12,12],"m":"k"}],"cr":"B"},{"g":"09","school":"臺中科技大學","dept":"流通管理系","q":16,"src":"hist","stab":"穩定","low":null,"p":0.17922,"tier":"中等","s1":[2,3],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[2],"need":10,"lo":7,"hi":13,"y":[12,11,10],"m":"k"},{"s":[3],"need":11,"lo":9,"hi":13,"y":[11,11,11],"m":"k"}],"cr":"B"},{"g":"09","school":"屏東大學","dept":"財務金融系","q":10,"src":"est","stab":null,"low":null,"p":0.13542,"tier":"中等","s1":[1,2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":6,"lo":4,"hi":8,"y":null,"m":"k"},{"s":[2],"need":7,"lo":5,"hi":9,"y":null,"m":"k"},{"s":[3],"need":11,"lo":9,"hi":13,"y":null,"m":"k"},{"s":[4],"need":12,"lo":10,"hi":14,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"高雄科技大學","dept":"供應鏈管理系","q":15,"src":"hist","stab":"穩定","low":null,"p":0.15268,"tier":"中等","s1":[1,2,3],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":10,"lo":7,"hi":13,"y":[10,11,10],"m":"k"},{"s":[2],"need":10,"lo":8,"hi":12,"y":[10,10,10],"m":"k"},{"s":[3],"need":10,"lo":8,"hi":12,"y":[11,10,10],"m":"k"}],"cr":"B"},{"g":"09","school":"虎尾科技大學","dept":"財務金融系","q":33,"src":"hist","stab":"變動大","low":null,"p":0.15862,"tier":"中等","s1":[1,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":7,"lo":3,"hi":11,"y":[10,10,5],"m":"k"},{"s":[3],"need":10,"lo":8,"hi":12,"y":[11,11,10],"m":"k"},{"s":[4],"need":12,"lo":10,"hi":14,"y":[11,12,12],"m":"k"}],"cr":"B"},{"g":"09","school":"高雄科技大學","dept":"資訊管理系","q":20,"src":"est","stab":null,"low":null,"p":0.12222,"tier":"中等","s1":[1,3,4],"s2":[1,3,4],"rem":[2],"add":[],"oc":[{"s":[1,2],"need":15,"y":null},{"s":[3],"need":12,"y":null},{"s":[4],"need":12,"y":null}],"st":"drop","c":[{"s":[1],"need":7,"lo":4,"hi":10,"y":null,"m":"x"},{"s":[3],"need":12,"lo":10,"hi":14,"y":null,"m":"k"},{"s":[4],"need":12,"lo":10,"hi":14,"y":null,"m":"k"}],"cr":"D"},{"g":"09","school":"勤益科技大學","dept":"企業管理系","q":56,"src":"est","stab":null,"low":null,"p":0.24646,"tier":"較寬","s1":[3,4],"s2":[0,1,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[4],"need":9,"lo":7,"hi":11,"y":null,"m":"k"},{"s":[3],"need":11,"lo":9,"hi":13,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"高雄科技大學","dept":"觀光管理系","q":6,"src":"est","stab":null,"low":null,"p":0.17147,"tier":"中等","s1":[0,1,3,4],"s2":[0,1,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0,1],"need":21,"lo":17,"hi":25,"y":null,"m":"k"},{"s":[4],"need":8,"lo":6,"hi":10,"y":null,"m":"k"},{"s":[3],"need":10,"lo":8,"hi":12,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"勤益科技大學","dept":"工業工程與管理系","q":41,"src":"hist","stab":"穩定","low":null,"p":0.21966,"tier":"中等","s1":[0,3,4],"s2":[0,3,4],"rem":[2],"add":[],"oc":[{"s":[0,2],"need":19,"y":[19,19,19]},{"s":[3,4],"need":20,"y":[19,20,20]}],"st":"drop","c":[{"s":[0],"need":10,"lo":8,"hi":12,"y":null,"m":"x"},{"s":[3,4],"need":20,"lo":18,"hi":22,"y":[19,20,20],"m":"k"}],"cr":"D"},{"g":"09","school":"虎尾科技大學","dept":"資訊管理系","q":15,"src":"est","stab":null,"low":null,"p":0.15955,"tier":"中等","s1":[0,4],"s2":[0,4],"rem":[3],"add":[],"oc":[{"s":[0],"need":8,"y":null},{"s":[4],"need":9,"y":null},{"s":[3],"need":12,"y":null}],"st":"drop","c":[{"s":[0],"need":8,"lo":6,"hi":10,"y":null,"m":"k"},{"s":[4],"need":13,"lo":10,"hi":15,"y":null,"m":"x"}],"cr":"D"},{"g":"09","school":"屏東科技大學","dept":"財務金融國際學士學位學程","q":6,"src":"est","stab":null,"low":null,"p":0.18964,"tier":"中等","s1":[1,3],"s2":[1,3],"rem":[4],"add":[],"oc":[{"s":[1],"need":7,"y":null},{"s":[3,4],"need":23,"y":null}],"st":"drop","c":[{"s":[1],"need":7,"lo":5,"hi":9,"y":null,"m":"k"},{"s":[3],"need":12,"lo":9,"hi":15,"y":null,"m":"x"}],"cr":"D"},{"g":"09","school":"臺中科技大學","dept":"會計資訊系","q":54,"src":"hist","stab":"變動大","low":null,"p":0.20316,"tier":"中等","s1":[3,4],"s2":[0,1,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[3],"need":8,"lo":4,"hi":12,"y":[11,11,6],"m":"k"},{"s":[4],"need":12,"lo":9,"hi":15,"y":[11,12,12],"m":"k"}],"cr":"B"},{"g":"09","school":"高雄餐旅大學","dept":"休閒暨遊憩管理系","q":5,"src":"est","stab":null,"low":null,"p":0.2513,"tier":"較寬","s1":[0,3],"s2":[0,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":10,"lo":8,"hi":12,"y":null,"m":"k"},{"s":[3],"need":9,"lo":7,"hi":11,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"屏東大學","dept":"商業大數據系","q":23,"src":"hist","stab":"穩定","low":"偏低","p":0.42956,"tier":"較寬","s1":[3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[3,4],"need":18,"lo":14,"hi":22,"y":[17,19,18],"m":"k"}],"cr":"B"},{"g":"09","school":"屏東大學","dept":"不動產經營系","q":23,"src":"hist","stab":"小幅波動","low":"低","p":0.56901,"tier":"較寬","s1":[3,4],"s2":[2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[3,4],"need":15,"lo":9,"hi":21,"y":[17,13,17],"m":"k"}],"cr":"B"},{"g":"09","school":"臺中科技大學","dept":"國際貿易與經營系","q":52,"src":"hist","stab":"小幅波動","low":null,"p":0.15549,"tier":"中等","s1":[1,2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[2],"need":4,"lo":1,"hi":7,"y":[4,5,3],"m":"k"},{"s":[1],"need":11,"lo":9,"hi":13,"y":[11,11,11],"m":"k"},{"s":[3,4],"need":21,"lo":18,"hi":24,"y":[20,22,21],"m":"k"}],"cr":"B"},{"g":"09","school":"高雄餐旅大學","dept":"旅運管理系","q":4,"src":"est","stab":null,"low":null,"p":0.1923,"tier":"中等","s1":[0,3],"s2":[0,3],"rem":[1],"add":[],"oc":[{"s":[0],"need":11,"y":null},{"s":[1],"need":8,"y":null},{"s":[3],"need":8,"y":null}],"st":"drop","c":[{"s":[0],"need":11,"lo":9,"hi":13,"y":null,"m":"k"},{"s":[3],"need":10,"lo":7,"hi":13,"y":null,"m":"x"}],"cr":"D"},{"g":"09","school":"屏東科技大學","dept":"企業管理系","q":52,"src":"hist","stab":"小幅波動","low":null,"p":0.25734,"tier":"較寬","s1":[0,3,4],"s2":[0,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":9,"lo":6,"hi":12,"y":[10,8,9],"m":"k"},{"s":[4],"need":8,"lo":6,"hi":10,"y":[7,8,8],"m":"k"},{"s":[3],"need":9,"lo":7,"hi":11,"y":[10,10,9],"m":"k"}],"cr":"B"},{"g":"09","school":"虎尾科技大學","dept":"工業管理系","q":44,"src":"hist","stab":"小幅波動","low":null,"p":0.18442,"tier":"中等","s1":[0,2,4],"s2":[0,2,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[2],"need":7,"lo":4,"hi":10,"y":[4,6,7],"m":"k"},{"s":[0],"need":9,"lo":7,"hi":11,"y":[10,9,9],"m":"k"},{"s":[4],"need":11,"lo":9,"hi":13,"y":[9,10,11],"m":"k"}],"cr":"B"},{"g":"09","school":"臺中科技大學","dept":"老人服務事業管理系","q":14,"src":"hist","stab":"變動大","low":null,"p":0.24024,"tier":"較寬","s1":[0,1,4],"s2":[0,1,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":9,"lo":5,"hi":13,"y":[5,10,9],"m":"k"},{"s":[1],"need":9,"lo":7,"hi":11,"y":[9,9,9],"m":"k"},{"s":[4],"need":8,"lo":6,"hi":10,"y":[7,8,8],"m":"k"}],"cr":"B"},{"g":"09","school":"屏東科技大學","dept":"工業管理系","q":60,"src":"est","stab":null,"low":"偏低","p":0.39299,"tier":"較寬","s1":[0,3],"s2":[0,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":6,"lo":3,"hi":9,"y":null,"m":"k"},{"s":[3],"need":9,"lo":6,"hi":12,"y":null,"m":"k"}],"cr":"C"},{"g":"09","school":"屏東科技大學","dept":"農企業管理系","q":8,"src":"est","stab":null,"low":"偏低","p":0.41752,"tier":"較寬","s1":[0,4],"s2":[0,4],"rem":[2],"add":[0],"oc":[{"s":[2],"need":7,"y":null},{"s":[4],"need":8,"y":null}],"st":"add","c":[{"s":[4],"need":8,"lo":5,"hi":11,"y":null,"m":"k"},{"s":[0],"need":7,"lo":4,"hi":10,"y":null,"m":"i"}],"cr":"D"},{"g":"09","school":"高雄餐旅大學","dept":"餐旅暨會展行銷管理系","q":5,"src":"est","stab":null,"low":null,"p":0.23969,"tier":"中等","s1":[0,1,3],"s2":[0,1,3],"rem":[2],"add":[],"oc":[{"s":[0],"need":10,"y":null},{"s":[1,2],"need":16,"y":null},{"s":[3],"need":8,"y":null}],"st":"drop","c":[{"s":[0],"need":10,"lo":8,"hi":12,"y":null,"m":"k"},{"s":[1],"need":8,"lo":5,"hi":11,"y":null,"m":"x"},{"s":[3],"need":8,"lo":6,"hi":10,"y":null,"m":"k"}],"cr":"D"},{"g":"09","school":"高雄科技大學","dept":"海洋休閒管理系","q":10,"src":"hist","stab":"變動大","low":"偏低","p":0.32842,"tier":"較寬","s1":[1,3],"s2":[1,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":6,"lo":1,"hi":11,"y":[7,10,4],"m":"k"},{"s":[3],"need":10,"lo":7,"hi":13,"y":[11,11,9],"m":"k"}],"cr":"B"},{"g":"09","school":"屏東大學","dept":"資訊管理系","q":22,"src":"hist","stab":"變動大","low":"偏低","p":0.39645,"tier":"較寬","s1":[2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[2],"need":5,"lo":1,"hi":9,"y":[8,8,3],"m":"k"},{"s":[3,4],"need":18,"lo":12,"hi":24,"y":[18,20,17],"m":"k"}],"cr":"B"},{"g":"09","school":"臺中科技大學","dept":"保險金融管理系","q":52,"src":"hist","stab":"變動大","low":"偏低","p":0.35265,"tier":"較寬","s1":[2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[2],"need":5,"lo":0,"hi":11,"y":[5,9,2],"m":"k"},{"s":[3],"need":8,"lo":4,"hi":12,"y":[10,11,6],"m":"k"},{"s":[4],"need":9,"lo":6,"hi":12,"y":[9,10,9],"m":"k"}],"cr":"B"},{"g":"09","school":"澎湖科技大學","dept":"資訊管理系","q":14,"src":"est","stab":null,"low":"低","p":0.61103,"tier":"較寬","s1":[0,4],"s2":[4],"rem":[3],"add":[4],"oc":[{"s":[0],"need":5,"y":null},{"s":[3],"need":6,"y":null}],"st":"add","c":[{"s":[0],"need":5,"lo":2,"hi":8,"y":null,"m":"k"},{"s":[4],"need":6,"lo":3,"hi":9,"y":null,"m":"i"}],"cr":"D"},{"g":"09","school":"澎湖科技大學","dept":"行銷與物流管理系","q":26,"src":"hist","stab":"變動大","low":"低","p":0.66335,"tier":"較寬","s1":[0,3],"s2":[0,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":5,"lo":3,"hi":7,"y":[4,4,5],"m":"k"},{"s":[3],"need":5,"lo":1,"hi":9,"y":[9,4,5],"m":"k"}],"cr":"B"},{"g":"21","school":"臺中科技大學","dept":"財務金融系","q":1,"src":"est","stab":null,"low":null,"p":0.12441,"tier":"較嚴","s1":[2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[2],"need":9,"lo":4,"hi":14,"y":null,"m":"k"},{"s":[3],"need":11,"lo":6,"hi":15,"y":null,"m":"k"},{"s":[4],"need":12,"lo":7,"hi":15,"y":null,"m":"k"}],"cr":"C"},{"g":"21","school":"臺中科技大學","dept":"資訊管理系","q":26,"src":"est","stab":null,"low":null,"p":0.17569,"tier":"較嚴","s1":[2,3],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[2],"need":8,"lo":5,"hi":11,"y":null,"m":"k"},{"s":[3],"need":12,"lo":9,"hi":15,"y":null,"m":"k"}],"cr":"C"},{"g":"21","school":"臺北商業大學","dept":"資訊管理系","q":9,"src":"est","stab":null,"low":null,"p":0.03315,"tier":"較嚴","s1":[1,2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1,2],"need":26,"lo":20,"hi":30,"y":null,"m":"k"},{"s":[4],"need":13,"lo":10,"hi":15,"y":null,"m":"k"},{"s":[3],"need":13,"lo":10,"hi":15,"y":null,"m":"k"}],"cr":"C"},{"g":"21","school":"臺中科技大學","dept":"應用統計系","q":14,"src":"est","stab":null,"low":null,"p":0.22697,"tier":"中等","s1":[2,3,4],"s2":[2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[2],"need":10,"lo":7,"hi":13,"y":null,"m":"k"},{"s":[3,4],"need":19,"lo":13,"hi":25,"y":null,"m":"k"}],"cr":"C"},{"g":"21","school":"雲林科技大學","dept":"資訊管理系","q":24,"src":"hist","stab":"變動大","low":null,"p":0.10125,"tier":"較嚴","s1":[1,2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1,2],"need":13,"lo":2,"hi":24,"y":[24,23,7],"m":"k"},{"s":[4],"need":12,"lo":7,"hi":15,"y":[12,13,12],"m":"k"},{"s":[3],"need":13,"lo":8,"hi":15,"y":[13,13,13],"m":"k"}],"cr":"B"},{"g":"21","school":"臺北護理健康大學","dept":"資訊管理系（資安人才）","q":1,"src":"est","stab":null,"low":null,"p":0.2127,"tier":"中等","s1":[2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[2],"need":9,"lo":6,"hi":12,"y":null,"m":"k"},{"s":[3],"need":9,"lo":6,"hi":12,"y":null,"m":"k"},{"s":[4],"need":10,"lo":7,"hi":13,"y":null,"m":"k"}],"cr":"C"},{"g":"21","school":"高雄科技大學","dept":"金融資訊系","q":8,"src":"est","stab":null,"low":null,"p":0.16053,"tier":"較嚴","s1":[0,2,3,4],"s2":[0,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0,2],"need":15,"lo":9,"hi":21,"y":null,"m":"k"},{"s":[3,4],"need":24,"lo":18,"hi":30,"y":null,"m":"k"}],"cr":"C"},{"g":"21","school":"臺中科技大學","dept":"資訊管理系（資安人才）","q":1,"src":"hist","stab":"變動大","low":null,"p":0.17945,"tier":"中等","s1":null,"s2":null,"rem":[],"add":[],"oc":null,"st":"absent","c":[],"cr":"X"},{"g":"21","school":"臺中科技大學","dept":"人工智慧應用工程學士學位學程","q":11,"src":"est","stab":null,"low":"偏低","p":0.34567,"tier":"較寬","s1":[2,3],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[2],"need":5,"lo":2,"hi":8,"y":null,"m":"k"},{"s":[3],"need":10,"lo":7,"hi":13,"y":null,"m":"k"}],"cr":"C"},{"g":"21","school":"虎尾科技大學","dept":"資訊工程系","q":4,"src":"est","stab":null,"low":null,"p":0.12062,"tier":"較嚴","s1":[2,3],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[2],"need":11,"lo":8,"hi":14,"y":null,"m":"k"},{"s":[3],"need":12,"lo":9,"hi":15,"y":null,"m":"k"}],"cr":"C"},{"g":"21","school":"臺北護理健康大學","dept":"健康事業管理系","q":13,"src":"est","stab":null,"low":"低","p":0.50148,"tier":"較寬","s1":[1,2,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":3,"lo":0,"hi":6,"y":null,"m":"k"},{"s":[2],"need":7,"lo":4,"hi":10,"y":null,"m":"k"},{"s":[4],"need":6,"lo":3,"hi":9,"y":null,"m":"k"}],"cr":"C"},{"g":"21","school":"虎尾科技大學","dept":"資訊管理系","q":8,"src":"est","stab":null,"low":null,"p":0.16647,"tier":"較嚴","s1":[0,4],"s2":[0,4],"rem":[3],"add":[],"oc":[{"s":[0],"need":8,"y":null},{"s":[4],"need":8,"y":null},{"s":[3],"need":12,"y":null}],"st":"drop","c":[{"s":[0],"need":8,"lo":5,"hi":11,"y":null,"m":"k"},{"s":[4],"need":13,"lo":10,"hi":15,"y":null,"m":"x"}],"cr":"D"},{"g":"21","school":"屏東科技大學","dept":"休閒運動健康系","q":8,"src":"est","stab":null,"low":"低","p":0.56637,"tier":"較寬","s1":null,"s2":null,"rem":[],"add":[],"oc":null,"st":"absent","c":[],"cr":"X"},{"g":"21","school":"聯合大學","dept":"資訊管理系","q":1,"src":"hist","stab":"變動大","low":null,"p":0.24518,"tier":"中等","s1":[0,3],"s2":[0,1,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":7,"lo":0,"hi":15,"y":[5,2,11],"m":"k"},{"s":[3],"need":11,"lo":5,"hi":15,"y":[10,11,11],"m":"k"}],"cr":"B"},{"g":"21","school":"高雄科技大學","dept":"風險管理與保險系","q":6,"src":"hist","stab":"變動大","low":null,"p":0.15293,"tier":"較嚴","s1":[0,2,3],"s2":[0,2,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":10,"lo":4,"hi":15,"y":[8,11,9],"m":"k"},{"s":[2],"need":10,"lo":5,"hi":15,"y":[7,10,10],"m":"k"},{"s":[3],"need":10,"lo":5,"hi":15,"y":[10,10,10],"m":"k"}],"cr":"B"},{"g":"21","school":"高雄科技大學","dept":"資訊管理系","q":25,"src":"est","stab":null,"low":null,"p":0.18105,"tier":"中等","s1":[1,3,4],"s2":[1,3,4],"rem":[2],"add":[],"oc":[{"s":[1,2],"need":13,"y":null},{"s":[3],"need":11,"y":null},{"s":[4],"need":11,"y":null}],"st":"drop","c":[{"s":[1],"need":6,"lo":3,"hi":9,"y":null,"m":"x"},{"s":[3],"need":11,"lo":8,"hi":14,"y":null,"m":"k"},{"s":[4],"need":11,"lo":8,"hi":14,"y":null,"m":"k"}],"cr":"D"},{"g":"21","school":"臺北商業大學","dept":"資訊管理系（資安人才）","q":1,"src":"est","stab":null,"low":null,"p":0.19989,"tier":"中等","s1":null,"s2":null,"rem":[],"add":[],"oc":null,"st":"absent","c":[],"cr":"X"},{"g":"21","school":"臺中科技大學","dept":"流通管理系","q":3,"src":"est","stab":null,"low":null,"p":0.22683,"tier":"中等","s1":[2,3],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[2],"need":8,"lo":3,"hi":13,"y":null,"m":"k"},{"s":[3],"need":11,"lo":6,"hi":15,"y":null,"m":"k"}],"cr":"C"},{"g":"21","school":"臺北護理健康大學","dept":"資訊管理系","q":21,"src":"hist","stab":"變動大","low":null,"p":0.2491,"tier":"中等","s1":[2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[2],"need":6,"lo":0,"hi":13,"y":[5,10,4],"m":"k"},{"s":[3],"need":7,"lo":0,"hi":14,"y":[10,11,4],"m":"k"},{"s":[4],"need":11,"lo":6,"hi":15,"y":[10,12,11],"m":"k"}],"cr":"B"},{"g":"21","school":"勤益科技大學","dept":"資訊工程系","q":10,"src":"est","stab":null,"low":null,"p":0.24518,"tier":"中等","s1":[0,3],"s2":[0,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":7,"lo":4,"hi":10,"y":null,"m":"k"},{"s":[3],"need":11,"lo":8,"hi":14,"y":null,"m":"k"}],"cr":"C"},{"g":"21","school":"高雄科技大學","dept":"智慧商務系","q":15,"src":"hist","stab":"變動大","low":null,"p":0.22661,"tier":"中等","s1":[0,3],"s2":[0,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":8,"lo":2,"hi":14,"y":[7,10,7],"m":"k"},{"s":[3],"need":11,"lo":6,"hi":15,"y":[10,12,11],"m":"k"}],"cr":"B"},{"g":"21","school":"臺中科技大學","dept":"多媒體設計系","q":6,"src":"hist","stab":"小幅波動","low":null,"p":0.29872,"tier":"中等","s1":[3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[3],"need":10,"lo":5,"hi":15,"y":[10,11,9],"m":"k"},{"s":[4],"need":9,"lo":4,"hi":14,"y":[10,9,9],"m":"k"}],"cr":"B"},{"g":"21","school":"屏東科技大學","dept":"水土保持系","q":1,"src":"est","stab":null,"low":"偏低","p":0.33045,"tier":"較寬","s1":null,"s2":null,"rem":[],"add":[],"oc":null,"st":"absent","c":[],"cr":"X"},{"g":"21","school":"勤益科技大學","dept":"行銷與流通管理系","q":23,"src":"est","stab":null,"low":"偏低","p":0.32057,"tier":"中等","s1":[0,3,4],"s2":[0,1,3,4],"rem":[1,2],"add":[4],"oc":[{"s":[0,1,2],"need":21,"y":null},{"s":[3],"need":10,"y":null}],"st":"add","c":[{"s":[0],"need":7,"lo":4,"hi":10,"y":null,"m":"x"},{"s":[3],"need":10,"lo":7,"hi":13,"y":null,"m":"k"},{"s":[4],"need":9,"lo":6,"hi":12,"y":null,"m":"i"}],"cr":"D"},{"g":"21","school":"臺中科技大學","dept":"資訊工程系","q":20,"src":"est","stab":null,"low":null,"p":0.261,"tier":"中等","s1":[2,3],"s2":[0,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[2],"need":6,"lo":3,"hi":9,"y":null,"m":"k"},{"s":[3],"need":11,"lo":8,"hi":14,"y":null,"m":"k"}],"cr":"C"},{"g":"21","school":"勤益科技大學","dept":"資訊管理系","q":29,"src":"est","stab":null,"low":null,"p":0.28753,"tier":"中等","s1":[0,2,3,4],"s2":[0,2,3,4],"rem":[],"add":[2],"oc":[{"s":[0],"need":7,"y":null},{"s":[4],"need":7,"y":null},{"s":[3],"need":10,"y":null}],"st":"add","c":[{"s":[0],"need":7,"lo":4,"hi":10,"y":null,"m":"k"},{"s":[4],"need":7,"lo":4,"hi":10,"y":null,"m":"k"},{"s":[3],"need":10,"lo":7,"hi":13,"y":null,"m":"k"},{"s":[2],"need":7,"lo":4,"hi":10,"y":null,"m":"i"}],"cr":"D"},{"g":"21","school":"高雄科技大學","dept":"商務資訊應用系","q":42,"src":"est","stab":null,"low":"偏低","p":0.37869,"tier":"較寬","s1":[1,2,3],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":4,"lo":1,"hi":7,"y":null,"m":"k"},{"s":[2],"need":6,"lo":3,"hi":9,"y":null,"m":"k"},{"s":[3],"need":9,"lo":6,"hi":12,"y":null,"m":"k"}],"cr":"C"},{"g":"21","school":"勤益科技大學","dept":"資訊管理系（資安人才）","q":1,"src":"est","stab":null,"low":"偏低","p":0.34673,"tier":"較寬","s1":null,"s2":null,"rem":[],"add":[],"oc":null,"st":"absent","c":[],"cr":"X"},{"g":"21","school":"屏東科技大學","dept":"資訊管理系","q":23,"src":"hist","stab":"變動大","low":"偏低","p":0.46591,"tier":"較寬","s1":[0,3],"s2":[0,3],"rem":[4],"add":[0],"oc":[{"s":[3],"need":7,"y":[4,9,5]},{"s":[4],"need":8,"y":[7,9,7]}],"st":"add","c":[{"s":[3],"need":7,"lo":0,"hi":14,"y":[4,9,5],"m":"k"},{"s":[0],"need":6,"lo":3,"hi":9,"y":null,"m":"i"}],"cr":"D"},{"g":"09","school":"政治大學","dept":"金融系","q":1,"src":"missing","stab":null,"low":null,"p":null,"tier":null,"s1":[0,1,2,3],"s2":[0,1,2,3],"rem":[],"add":[],"oc":null,"st":"nodata","c":[],"cr":"D"},{"g":"09","school":"中正大學","dept":"企業管理系","q":1,"src":"missing","stab":null,"low":null,"p":null,"tier":null,"s1":[0,1,2,4],"s2":[0,1,2,4],"rem":[],"add":[],"oc":null,"st":"nodata","c":[],"cr":"D"},{"g":"09","school":"中央大學","dept":"經濟系","q":1,"src":"missing","stab":null,"low":null,"p":null,"tier":null,"s1":[1,2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"nodata","c":[],"cr":"D"},{"g":"09","school":"臺灣體育運動大學","dept":"運動事業管理系","q":1,"src":"missing","stab":null,"low":null,"p":null,"tier":null,"s1":[0,1,3,4],"s2":[0,1,3,4],"rem":[],"add":[],"oc":null,"st":"nodata","c":[],"cr":"D"},{"g":"09","school":"中央大學","dept":"財務金融系","q":1,"src":"missing","stab":null,"low":null,"p":null,"tier":null,"s1":[1,2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"nodata","c":[],"cr":"D"},{"g":"09","school":"金門大學","dept":"企業管理系","q":7,"src":"missing","stab":null,"low":null,"p":null,"tier":null,"s1":[0,3,4],"s2":[0,3,4],"rem":[],"add":[],"oc":null,"st":"nodata","c":[],"cr":"D"},{"g":"21","school":"臺灣科技大學","dept":"資訊管理系","q":11,"src":"missing","stab":null,"low":null,"p":null,"tier":null,"s1":[0,1,2,4],"s2":[0,1,2,4],"rem":[],"add":[],"oc":null,"st":"nodata","c":[],"cr":"D"},{"g":"21","school":"臺灣科技大學","dept":"資訊管理系（資安人才）","q":1,"src":"missing","stab":null,"low":null,"p":null,"tier":null,"s1":null,"s2":null,"rem":[],"add":[],"oc":null,"st":"absent","c":[],"cr":"X"},{"g":"21","school":"臺灣藝術大學","dept":"圖文傳播藝術系","q":1,"src":"missing","stab":null,"low":null,"p":null,"tier":null,"s1":[0,1,3,4],"s2":[0,1,3,4],"rem":[],"add":[],"oc":null,"st":"nodata","c":[],"cr":"D"},{"g":"21","school":"臺東大學","dept":"資訊管理系","q":1,"src":"missing","stab":null,"low":null,"p":null,"tier":null,"s1":[1,2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"nodata","c":[],"cr":"D"},{"g":"09","school":"勤益科技大學","dept":"人工智慧應用工程系","q":7,"src":"est","stab":null,"low":null,"p":0.17949,"tier":"中等","s1":[0,3],"s2":[0,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":10,"lo":7,"hi":13,"y":null,"m":"x"},{"s":[3],"need":11,"lo":8,"hi":14,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"勤益科技大學","dept":"應用英語系","q":8,"src":"est","stab":null,"low":null,"p":0.17684,"tier":"中等","s1":[0,1,3],"s2":[0,1,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0,1],"need":22,"lo":19,"hi":25,"y":null,"m":"x"},{"s":[3],"need":10,"lo":7,"hi":13,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"勤益科技大學","dept":"文化創意事業系","q":13,"src":"est","stab":null,"low":null,"p":0.19249,"tier":"中等","s1":[0,1,3],"s2":[0,1,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":9,"lo":6,"hi":12,"y":null,"m":"x"},{"s":[0],"need":9,"lo":6,"hi":12,"y":null,"m":"x"},{"s":[3],"need":10,"lo":7,"hi":13,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"屏東大學","dept":"休閒事業經營學系","q":12,"src":"est","stab":null,"low":null,"p":0.42956,"tier":"較寬","s1":[3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[3,4],"need":18,"lo":15,"hi":21,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"屏東大學","dept":"國際經營與貿易學系","q":30,"src":"est","stab":null,"low":null,"p":0.42956,"tier":"較寬","s1":[3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[3,4],"need":18,"lo":15,"hi":21,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"屏東大學","dept":"應用日語學系","q":21,"src":"est","stab":null,"low":null,"p":0.42096,"tier":"較寬","s1":[0,3,4],"s2":[0,1,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":8,"lo":5,"hi":11,"y":null,"m":"x"},{"s":[3,4],"need":15,"lo":12,"hi":18,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"屏東大學","dept":"應用英語學系","q":14,"src":"est","stab":null,"low":null,"p":0.4702,"tier":"較寬","s1":[1,3,4],"s2":[0,1,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":4,"lo":1,"hi":7,"y":null,"m":"x"},{"s":[3,4],"need":16,"lo":13,"hi":19,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"屏東科技大學","dept":"休閒運動健康系","q":7,"src":"est","stab":null,"low":null,"p":0.28307,"tier":"較寬","s1":[0,3],"s2":[0,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":9,"lo":6,"hi":12,"y":null,"m":"x"},{"s":[3],"need":10,"lo":7,"hi":13,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"屏東科技大學","dept":"應用外語系","q":13,"src":"est","stab":null,"low":null,"p":0.67336,"tier":"較寬","s1":[1,4],"s2":[1,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":3,"lo":0,"hi":6,"y":null,"m":"x"},{"s":[4],"need":6,"lo":3,"hi":9,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"屏東科技大學","dept":"時尚設計與管理系","q":1,"src":"est","stab":null,"low":null,"p":0.15872,"tier":"中等","s1":[0,3],"s2":[0,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":12,"lo":9,"hi":15,"y":null,"m":"x"},{"s":[3],"need":10,"lo":7,"hi":13,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"屏東科技大學","dept":"植物醫學系","q":4,"src":"est","stab":null,"low":null,"p":0.09398,"tier":"中等","s1":[0,3],"s2":[0,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":10,"lo":7,"hi":13,"y":null,"m":"x"},{"s":[3],"need":10,"lo":7,"hi":13,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"屏東科技大學","dept":"社會工作系","q":14,"src":"est","stab":null,"low":null,"p":0.4228,"tier":"較寬","s1":[0,3,4],"s2":[0,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":6,"lo":3,"hi":9,"y":null,"m":"x"},{"s":[3,4],"need":17,"lo":14,"hi":20,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"暨南國際大學","dept":"觀光休閒與餐旅管理學系觀光休閒組","q":1,"src":"est","stab":null,"low":null,"p":0.22676,"tier":"中等","s1":[0,3],"s2":[0,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":11,"lo":8,"hi":14,"y":null,"m":"x"},{"s":[3],"need":9,"lo":6,"hi":12,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"澎湖科技大學","dept":"應用外語系","q":7,"src":"est","stab":null,"low":null,"p":0.54087,"tier":"較寬","s1":[0,1,3],"s2":[0,1,3],"rem":[4],"add":[],"oc":[{"s":[0],"need":7,"y":null},{"s":[1],"need":5,"y":null},{"s":[3,4],"need":8,"y":null}],"st":"drop","c":[{"s":[0],"need":7,"lo":4,"hi":10,"y":null,"m":"x"},{"s":[1],"need":5,"lo":2,"hi":8,"y":null,"m":"x"},{"s":[3],"need":3,"lo":0,"hi":8,"y":null,"m":"x"}],"cr":"D"},{"g":"09","school":"澎湖科技大學","dept":"海洋遊憩系","q":7,"src":"est","stab":null,"low":null,"p":0.46591,"tier":"較寬","s1":[0,3],"s2":[0,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":6,"lo":3,"hi":9,"y":null,"m":"x"},{"s":[3],"need":7,"lo":4,"hi":10,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"臺中科技大學","dept":"休閒事業經營系","q":13,"src":"est","stab":null,"low":null,"p":0.16322,"tier":"中等","s1":[1,3,4],"s2":[0,1,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":12,"lo":9,"hi":15,"y":null,"m":"x"},{"s":[3,4],"need":18,"lo":15,"hi":21,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"臺中科技大學","dept":"應用中文系","q":12,"src":"est","stab":null,"low":null,"p":0.15872,"tier":"中等","s1":[0,3],"s2":[0,1,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":12,"lo":9,"hi":15,"y":null,"m":"x"},{"s":[3],"need":10,"lo":7,"hi":13,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"臺中科技大學","dept":"應用日語系","q":3,"src":"est","stab":null,"low":null,"p":0.13958,"tier":"中等","s1":[0,1,3,4],"s2":[1,4],"rem":[],"add":[0,4],"oc":[{"s":[1],"need":11,"y":null},{"s":[3],"need":10,"y":null}],"st":"add","c":[{"s":[1],"need":11,"lo":8,"hi":14,"y":null,"m":"x"},{"s":[3],"need":10,"lo":7,"hi":13,"y":null,"m":"x"},{"s":[0],"need":10,"lo":5,"hi":15,"y":null,"m":"x"},{"s":[4],"need":11,"lo":6,"hi":15,"y":null,"m":"x"}],"cr":"D"},{"g":"09","school":"臺中科技大學","dept":"應用英語系","q":11,"src":"est","stab":null,"low":null,"p":0.26675,"tier":"較寬","s1":[0,1,3,4],"s2":[0,1,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0,1],"need":17,"lo":14,"hi":20,"y":null,"m":"x"},{"s":[3,4],"need":20,"lo":17,"hi":23,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"臺北商業大學","dept":"商業設計管理系（桃園校區）","q":7,"src":"est","stab":null,"low":null,"p":0.06609,"tier":"中等","s1":[0,1,3,4],"s2":[0,1,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":11,"lo":8,"hi":14,"y":null,"m":"x"},{"s":[0],"need":10,"lo":7,"hi":13,"y":null,"m":"x"},{"s":[3],"need":11,"lo":8,"hi":14,"y":null,"m":"x"},{"s":[4],"need":12,"lo":9,"hi":15,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"臺北商業大學","dept":"數位多媒體設計系（桃園校區）","q":6,"src":"est","stab":null,"low":null,"p":0.13035,"tier":"中等","s1":[0,3,4],"s2":[3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":9,"lo":6,"hi":12,"y":null,"m":"x"},{"s":[4],"need":11,"lo":8,"hi":14,"y":null,"m":"x"},{"s":[3],"need":12,"lo":9,"hi":15,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"臺北科技大學","dept":"應用英文系","q":null,"src":"est","stab":null,"low":null,"p":null,"tier":null,"s1":[1,3,4],"s2":[1,3,4],"rem":[],"add":[],"oc":null,"st":"nodata","c":[],"cr":"X"},{"g":"09","school":"臺北護理健康大學","dept":"休閒產業與健康促進系","q":4,"src":"est","stab":null,"low":null,"p":0.15603,"tier":"中等","s1":[0,3],"s2":[0,1,3],"rem":[1],"add":[0],"oc":[{"s":[1],"need":11,"y":null},{"s":[3],"need":11,"y":null}],"st":"add","c":[{"s":[3],"need":11,"lo":8,"hi":14,"y":null,"m":"x"},{"s":[0],"need":11,"lo":6,"hi":15,"y":null,"m":"x"}],"cr":"D"},{"g":"09","school":"臺北護理健康大學","dept":"健康事業管理系","q":15,"src":"est","stab":null,"low":null,"p":0.20227,"tier":"中等","s1":[1,2,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":7,"lo":4,"hi":10,"y":null,"m":"x"},{"s":[2],"need":10,"lo":7,"hi":13,"y":null,"m":"x"},{"s":[4],"need":10,"lo":7,"hi":13,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"臺北護理健康大學","dept":"生死與健康心理諮商系","q":12,"src":"est","stab":null,"low":null,"p":0.16464,"tier":"中等","s1":[0,1,3],"s2":[0,1,3],"rem":[4],"add":[3],"oc":[{"s":[0],"need":9,"y":null},{"s":[1],"need":10,"y":null},{"s":[4],"need":10,"y":null}],"st":"add","c":[{"s":[0],"need":9,"lo":6,"hi":12,"y":null,"m":"x"},{"s":[1],"need":10,"lo":7,"hi":13,"y":null,"m":"x"},{"s":[3],"need":11,"lo":6,"hi":15,"y":null,"m":"x"}],"cr":"D"},{"g":"09","school":"臺北護理健康大學","dept":"護理系","q":10,"src":"est","stab":null,"low":null,"p":0.32835,"tier":"較寬","s1":[0,1,3],"s2":[0,3,4],"rem":[2],"add":[],"oc":[{"s":[0],"need":6,"y":null},{"s":[1],"need":4,"y":null},{"s":[2],"need":5,"y":null},{"s":[3],"need":9,"y":null}],"st":"drop","c":[{"s":[0],"need":6,"lo":3,"hi":9,"y":null,"m":"x"},{"s":[1],"need":4,"lo":1,"hi":7,"y":null,"m":"x"},{"s":[3],"need":10,"lo":5,"hi":15,"y":null,"m":"x"}],"cr":"D"},{"g":"09","school":"臺北護理健康大學","dept":"運動保健系","q":7,"src":"est","stab":null,"low":null,"p":0.31983,"tier":"較寬","s1":[0,1,3],"s2":[1,3],"rem":[4],"add":[],"oc":[{"s":[0,1,3],"need":23,"y":null},{"s":[4],"need":10,"y":null}],"st":"drop","c":[{"s":[0,1,3],"need":30,"lo":25,"hi":35,"y":null,"m":"x"}],"cr":"D"},{"g":"09","school":"臺北護理健康大學","dept":"高齡健康照護系","q":12,"src":"est","stab":null,"low":null,"p":0.1923,"tier":"中等","s1":[0,3],"s2":[0,3],"rem":[1],"add":[],"oc":[{"s":[0,1],"need":20,"y":null},{"s":[3],"need":10,"y":null}],"st":"drop","c":[{"s":[0],"need":11,"lo":6,"hi":15,"y":null,"m":"x"},{"s":[3],"need":10,"lo":7,"hi":13,"y":null,"m":"x"}],"cr":"D"},{"g":"09","school":"臺東專科學校","dept":"創意商品設計科","q":null,"src":"est","stab":null,"low":null,"p":null,"tier":null,"s1":[0,2,3,4],"s2":[0,2,3,4],"rem":[],"add":[],"oc":null,"st":"nodata","c":[],"cr":"X"},{"g":"09","school":"臺東專科學校","dept":"行銷與流通管理科","q":12,"src":"est","stab":null,"low":null,"p":0.6974,"tier":"較寬","s1":[0,1,3,4],"s2":[0,1,3,4],"rem":[2],"add":[],"oc":[{"s":[0],"need":5,"y":null},{"s":[1],"need":2,"y":null},{"s":[2],"need":3,"y":null},{"s":[3,4],"need":8,"y":null}],"st":"drop","c":[{"s":[0],"need":5,"lo":2,"hi":8,"y":null,"m":"x"},{"s":[1],"need":2,"lo":0,"hi":5,"y":null,"m":"x"},{"s":[3,4],"need":10,"lo":5,"hi":15,"y":null,"m":"x"}],"cr":"D"},{"g":"09","school":"臺東專科學校","dept":"資訊管理科","q":8,"src":"est","stab":null,"low":null,"p":0.51537,"tier":"較寬","s1":[0,3],"s2":[0,3],"rem":[1,4],"add":[],"oc":[{"s":[0],"need":5,"y":null},{"s":[1],"need":2,"y":null},{"s":[3],"need":5,"y":null},{"s":[4],"need":5,"y":null}],"st":"drop","c":[{"s":[0],"need":5,"lo":2,"hi":8,"y":null,"m":"x"},{"s":[3],"need":7,"lo":2,"hi":12,"y":null,"m":"x"}],"cr":"D"},{"g":"09","school":"虎尾科技大學","dept":"應用外語系","q":36,"src":"est","stab":null,"low":null,"p":0.35031,"tier":"較寬","s1":[1,3],"s2":[1,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":4,"lo":1,"hi":7,"y":null,"m":"x"},{"s":[3],"need":10,"lo":7,"hi":13,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"雲林科技大學","dept":"應用外語系","q":1,"src":"est","stab":null,"low":null,"p":0.03496,"tier":"較嚴","s1":[0,1,2,3],"s2":[0,1,2,3],"rem":[4],"add":[],"oc":[{"s":[2],"need":12,"y":null},{"s":[0],"need":11,"y":null},{"s":[1],"need":14,"y":null},{"s":[3,4],"need":22,"y":null}],"st":"drop","c":[{"s":[2],"need":12,"lo":9,"hi":15,"y":null,"m":"x"},{"s":[0],"need":11,"lo":8,"hi":14,"y":null,"m":"x"},{"s":[1],"need":14,"lo":11,"hi":15,"y":null,"m":"x"},{"s":[3],"need":11,"lo":6,"hi":15,"y":null,"m":"x"}],"cr":"D"},{"g":"09","school":"雲林科技大學","dept":"文化資產維護系","q":9,"src":"est","stab":null,"low":null,"p":0.17823,"tier":"中等","s1":[0,3],"s2":[0,3],"rem":[1,4],"add":[],"oc":[{"s":[0],"need":11,"y":null},{"s":[1],"need":10,"y":null},{"s":[3],"need":10,"y":null},{"s":[4],"need":11,"y":null}],"st":"drop","c":[{"s":[0],"need":11,"lo":8,"hi":14,"y":null,"m":"x"},{"s":[3],"need":13,"lo":8,"hi":15,"y":null,"m":"x"}],"cr":"D"},{"g":"09","school":"體育大學","dept":"休閒產業經營學系","q":2,"src":"est","stab":null,"low":null,"p":0.18168,"tier":"中等","s1":[0,1,3,4],"s2":[0,1,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0,1],"need":19,"lo":16,"hi":22,"y":null,"m":"x"},{"s":[3,4],"need":22,"lo":19,"hi":25,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"高雄科技大學","dept":"人力資源發展系","q":26,"src":"est","stab":null,"low":null,"p":0.14115,"tier":"中等","s1":[0,1,3],"s2":[0,1,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":10,"lo":7,"hi":13,"y":null,"m":"x"},{"s":[1],"need":11,"lo":8,"hi":14,"y":null,"m":"x"},{"s":[3],"need":10,"lo":7,"hi":13,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"高雄科技大學","dept":"商務資訊應用系","q":11,"src":"est","stab":null,"low":null,"p":0.1637,"tier":"中等","s1":[1,2,3],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":13,"lo":10,"hi":15,"y":null,"m":"x"},{"s":[2],"need":8,"lo":5,"hi":11,"y":null,"m":"x"},{"s":[3],"need":10,"lo":7,"hi":13,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"高雄科技大學","dept":"應用德語系","q":11,"src":"est","stab":null,"low":null,"p":0.13899,"tier":"中等","s1":[0,1,3],"s2":[0,1,3,4],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":9,"lo":6,"hi":12,"y":null,"m":"x"},{"s":[1],"need":12,"lo":9,"hi":15,"y":null,"m":"x"},{"s":[3],"need":10,"lo":7,"hi":13,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"高雄科技大學","dept":"應用日語系","q":6,"src":"est","stab":null,"low":null,"p":0.14599,"tier":"中等","s1":[1,3],"s2":[1,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":12,"lo":9,"hi":15,"y":null,"m":"x"},{"s":[3],"need":10,"lo":7,"hi":13,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"高雄科技大學","dept":"應用英語系","q":35,"src":"est","stab":null,"low":null,"p":0.53603,"tier":"較寬","s1":[1,3],"s2":[1,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[1],"need":4,"lo":1,"hi":7,"y":null,"m":"x"},{"s":[3],"need":7,"lo":4,"hi":10,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"高雄科技大學","dept":"智慧商務系","q":22,"src":"est","stab":null,"low":null,"p":0.17515,"tier":"中等","s1":[0,3],"s2":[0,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":10,"lo":6,"hi":14,"y":null,"m":"x"},{"s":[3],"need":12,"lo":9,"hi":15,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"高雄科技大學","dept":"海事資訊科技系","q":7,"src":"est","stab":null,"low":null,"p":0.29568,"tier":"較寬","s1":[0,1,2,3],"s2":[1,2,3],"rem":[],"add":[0],"oc":[{"s":[1,2],"need":16,"y":null},{"s":[3],"need":9,"y":null}],"st":"add","c":[{"s":[1,2],"need":16,"lo":13,"hi":19,"y":null,"m":"x"},{"s":[3],"need":9,"lo":6,"hi":12,"y":null,"m":"x"},{"s":[0],"need":8,"lo":3,"hi":13,"y":null,"m":"x"}],"cr":"D"},{"g":"09","school":"高雄科技大學","dept":"漁業科技與管理系","q":16,"src":"est","stab":null,"low":null,"p":0.09398,"tier":"中等","s1":[0,3],"s2":[0,3],"rem":[],"add":[],"oc":null,"st":"same","c":[{"s":[0],"need":10,"lo":7,"hi":13,"y":null,"m":"x"},{"s":[3],"need":10,"lo":7,"hi":13,"y":null,"m":"x"}],"cr":"C"},{"g":"09","school":"高雄科技大學","dept":"航運技術系","q":9,"src":"est","stab":null,"low":null,"p":0.15592,"tier":"中等","s1":[0,1,3],"s2":[1,3],"rem":[],"add":[0],"oc":[{"s":[1],"need":10,"y":null},{"s":[3],"need":10,"y":null}],"st":"add","c":[{"s":[1],"need":10,"lo":7,"hi":13,"y":null,"m":"x"},{"s":[3],"need":10,"lo":7,"hi":13,"y":null,"m":"x"},{"s":[0],"need":10,"lo":5,"hi":15,"y":null,"m":"x"}],"cr":"D"},{"g":"09","school":"高雄餐旅大學","dept":"旅館管理系","q":null,"src":"est","stab":null,"low":null,"p":null,"tier":null,"s1":[0,1,3],"s2":[0,1,3],"rem":[],"add":[],"oc":null,"st":"nodata","c":[],"cr":"X"},{"g":"21","school":"屏東大學","dept":"資訊管理學系","q":null,"src":"est","stab":null,"low":null,"p":null,"tier":null,"s1":[2,3,4],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"nodata","c":[],"cr":"X"},{"g":"21","school":"澎湖科技大學","dept":"資訊管理系","q":null,"src":"est","stab":null,"low":null,"p":null,"tier":null,"s1":[0,3],"s2":[3],"rem":[],"add":[],"oc":null,"st":"nodata","c":[],"cr":"X"},{"g":"21","school":"虎尾科技大學","dept":"資訊工程系（資安人才）","q":null,"src":"est","stab":null,"low":null,"p":null,"tier":null,"s1":[2,3],"s2":[1,2,3,4],"rem":[],"add":[],"oc":null,"st":"nodata","c":[],"cr":"X"}],"extra":[{"g":"09","school":"勤益科技大學","dept":"人工智慧應用工程系","s1":[0,3],"s2":[0,3],"sys":"四技"},{"g":"09","school":"勤益科技大學","dept":"應用英語系","s1":[0,1,3],"s2":[0,1,3],"sys":"四技"},{"g":"09","school":"勤益科技大學","dept":"文化創意事業系","s1":[0,1,3],"s2":[0,1,3],"sys":"四技"},{"g":"09","school":"屏東大學","dept":"休閒事業經營學系","s1":[3,4],"s2":[1,2,3,4],"sys":"四技"},{"g":"09","school":"屏東大學","dept":"國際經營與貿易學系","s1":[3,4],"s2":[1,2,3,4],"sys":"四技"},{"g":"09","school":"屏東大學","dept":"應用日語學系","s1":[0,3,4],"s2":[0,1,3,4],"sys":"四技"},{"g":"09","school":"屏東大學","dept":"應用英語學系","s1":[1,3,4],"s2":[0,1,3,4],"sys":"四技"},{"g":"09","school":"屏東科技大學","dept":"休閒運動健康系","s1":[0,3],"s2":[0,3],"sys":"四技"},{"g":"09","school":"屏東科技大學","dept":"應用外語系","s1":[1,4],"s2":[1,4],"sys":"四技"},{"g":"09","school":"屏東科技大學","dept":"時尚設計與管理系","s1":[0,3],"s2":[0,3],"sys":"四技"},{"g":"09","school":"屏東科技大學","dept":"植物醫學系","s1":[0,3],"s2":[0,3],"sys":"四技"},{"g":"09","school":"屏東科技大學","dept":"社會工作系","s1":[0,3,4],"s2":[0,3,4],"sys":"四技"},{"g":"09","school":"暨南國際大學","dept":"觀光休閒與餐旅管理學系觀光休閒組","s1":[0,3],"s2":[0,3],"sys":"四技"},{"g":"09","school":"澎湖科技大學","dept":"應用外語系","s1":[0,1,3],"s2":[0,1,3],"sys":"四技"},{"g":"09","school":"澎湖科技大學","dept":"海洋遊憩系","s1":[0,3],"s2":[0,3],"sys":"四技"},{"g":"09","school":"臺中科技大學","dept":"休閒事業經營系","s1":[1,3,4],"s2":[0,1,3,4],"sys":"四技"},{"g":"09","school":"臺中科技大學","dept":"應用中文系","s1":[0,3],"s2":[0,1,3,4],"sys":"四技"},{"g":"09","school":"臺中科技大學","dept":"應用日語系","s1":[0,1,3,4],"s2":[1,4],"sys":"四技"},{"g":"09","school":"臺中科技大學","dept":"應用英語系","s1":[0,1,3,4],"s2":[0,1,3,4],"sys":"四技"},{"g":"09","school":"臺北商業大學","dept":"商業設計管理系（桃園校區）","s1":[0,1,3,4],"s2":[0,1,3,4],"sys":"四技"},{"g":"09","school":"臺北商業大學","dept":"數位多媒體設計系（桃園校區）","s1":[0,3,4],"s2":[3],"sys":"四技"},{"g":"09","school":"臺北科技大學","dept":"應用英文系","s1":[1,3,4],"s2":[1,3,4],"sys":"四技"},{"g":"09","school":"臺北護理健康大學","dept":"休閒產業與健康促進系","s1":[0,3],"s2":[0,1,3],"sys":"四技"},{"g":"09","school":"臺北護理健康大學","dept":"健康事業管理系","s1":[1,2,4],"s2":[1,2,3,4],"sys":"四技"},{"g":"09","school":"臺北護理健康大學","dept":"生死與健康心理諮商系","s1":[0,1,3],"s2":[0,1,3],"sys":"四技"},{"g":"09","school":"臺北護理健康大學","dept":"護理系","s1":[0,1,3],"s2":[0,3,4],"sys":"四技"},{"g":"09","school":"臺北護理健康大學","dept":"運動保健系","s1":[0,1,3],"s2":[1,3],"sys":"四技"},{"g":"09","school":"臺北護理健康大學","dept":"高齡健康照護系","s1":[0,3],"s2":[0,3],"sys":"四技"},{"g":"09","school":"臺東專科學校","dept":"創意商品設計科","s1":[0,2,3,4],"s2":[0,2,3,4],"sys":"二專"},{"g":"09","school":"臺東專科學校","dept":"行銷與流通管理科","s1":[0,1,3,4],"s2":[0,1,3,4],"sys":"二專"},{"g":"09","school":"臺東專科學校","dept":"資訊管理科","s1":[0,3],"s2":[0,3],"sys":"二專"},{"g":"09","school":"虎尾科技大學","dept":"應用外語系","s1":[1,3],"s2":[1,3],"sys":"四技"},{"g":"09","school":"雲林科技大學","dept":"應用外語系","s1":[0,1,2,3],"s2":[0,1,2,3],"sys":"四技"},{"g":"09","school":"雲林科技大學","dept":"文化資產維護系","s1":[0,3],"s2":[0,3],"sys":"四技"},{"g":"09","school":"體育大學","dept":"休閒產業經營學系","s1":[0,1,3,4],"s2":[0,1,3,4],"sys":"四技"},{"g":"09","school":"高雄科技大學","dept":"人力資源發展系","s1":[0,1,3],"s2":[0,1,3],"sys":"四技"},{"g":"09","school":"高雄科技大學","dept":"商務資訊應用系","s1":[1,2,3],"s2":[1,2,3,4],"sys":"四技"},{"g":"09","school":"高雄科技大學","dept":"應用德語系","s1":[0,1,3],"s2":[0,1,3,4],"sys":"四技"},{"g":"09","school":"高雄科技大學","dept":"應用日語系","s1":[1,3],"s2":[1,3],"sys":"四技"},{"g":"09","school":"高雄科技大學","dept":"應用英語系","s1":[1,3],"s2":[1,3],"sys":"四技"},{"g":"09","school":"高雄科技大學","dept":"智慧商務系","s1":[0,3],"s2":[0,3],"sys":"四技"},{"g":"09","school":"高雄科技大學","dept":"海事資訊科技系","s1":[0,1,2,3],"s2":[1,2,3],"sys":"四技"},{"g":"09","school":"高雄科技大學","dept":"漁業科技與管理系","s1":[0,3],"s2":[0,3],"sys":"四技"},{"g":"09","school":"高雄科技大學","dept":"航運技術系","s1":[0,1,3],"s2":[1,3],"sys":"四技"},{"g":"09","school":"高雄餐旅大學","dept":"旅館管理系","s1":[0,1,3],"s2":[0,1,3],"sys":"四技"},{"g":"21","school":"屏東大學","dept":"資訊管理學系","s1":[2,3,4],"s2":[1,2,3,4],"sys":"四技"},{"g":"21","school":"澎湖科技大學","dept":"資訊管理系","s1":[0,3],"s2":[3],"sys":"四技"},{"g":"21","school":"虎尾科技大學","dept":"資訊工程系（資安人才）","s1":[2,3],"s2":[1,2,3,4],"sys":"四技"}]};
+const SUBJ = ["國文","英文","數學","專業一","專業二"];
+const DEMO = [11,12,11,13,13];
+const PAGE = 12;
+const ORDER = {safe:0,pass:1,near:2,far:3,wait:4,out:5};
+const NAME = {safe:"穩穩達標",pass:"達標但不穩",near:"差一點",far:"還有距離",wait:"還不能判斷",out:"不能報"};
+const store = {
+  get(k,d){try{const v=localStorage.getItem("v7_"+k);return v===null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem("v7_"+k,JSON.stringify(v))}catch(e){}}
+};
+const clamp = v => Math.max(0, Math.min(15, Math.round(Number(v) || 0)));
+let scores = store.get("scores", null);
+let isDemo = !Array.isArray(scores) || scores.length !== 5;
+scores = isDemo ? DEMO.slice() : scores.map(clamp);
+let favs = new Set(store.get("favs", []));
+let prs = store.get("prs", [null,null,null,null,null]) || [null,null,null,null,null];
+let skip = new Set((store.get("skip", []) || []).filter(i => i >= 0 && i <= 4));
+let picks = new Set((store.get("picks", []) || []).filter(i => i >= 0 && i <= 4));
+let pickMode = ["any","all","only"].includes(store.get("pickMode","any")) ? store.get("pickMode","any") : "any";
+let planMode = ["safe3","bal"].includes(store.get("planMode","safe3")) ? store.get("planMode","safe3") : "safe3";
+let planKeys = [];
+const state = {g: store.get("g","all"), cat: null, q: "", school: "", sort: "strict", favOnly: false, shown: PAGE};
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const label = c => c.s.length === 1 ? SUBJ[c.s[0]] : c.s.map(i => SUBJ[i]).join("＋") + " 合計";
+const names = a => a.map(i => SUBJ[i]).join("、");
+const keyOf = r => r.g + "|" + r.school + r.dept;
+const gName = g => g === "09" ? "09 商管" : "21 資管";
+const sumOf = (c, sc) => c.s.reduce((a,i) => a + sc[i], 0);
+const isWait = r => !r.c.length;
+const needs = r => r.s1 ? [...new Set([...r.s1, ...r.s2])] : [];
+const blockedBy = r => needs(r).filter(i => skip.has(i));
+const hit = r => needs(r).filter(i => picks.has(i)).length;
+const pickOK = r => {
+  if (!picks.size) return true;
+  const n = needs(r); if (!n.length) return false;
+  const h = hit(r);
+  return pickMode === "any" ? h > 0 : pickMode === "all" ? h === picks.size : h === n.length;
+};
+const passAll = (r, sc) => r.c.every(c => sumOf(c, sc) >= c.need);
+
+/* 補分方案：各科加 0～8 級分、合計 1～8 的所有組合，依「合計少、單科加得少、科數少」排序 */
+const PLANS = (() => {
+  const out = [], z = [0,0,0,0,0];
+  (function walk(i, left){
+    if (i === 5) { const t = z.reduce((a,b) => a+b, 0); if (t) out.push({z: z.slice(), t, n: z.filter(x => x).length, m: Math.max(...z)}); return; }
+    for (let v = 0; v <= left; v++) { z[i] = v; walk(i+1, left - v); }
+    z[i] = 0;
+  })(0, 8);
+  return out.sort((a,b) => a.t - b.t || a.m - b.m || a.n - b.n);
+})();
+function findPlan(r){
+  for (const p of PLANS) {
+    if (p.z.some((v,i) => v && scores[i] + v > 15)) continue;
+    if (r.c.every(c => c.s.reduce((a,i) => a + scores[i] + p.z[i], 0) >= c.need)) return p;
+  }
+  return null;
+}
+
+function evalRow(r){
+  const res = r.c.map(c => {
+    const you = sumOf(c, scores);
+    const st = you >= c.hi ? "safe" : you >= c.need ? "pass" : "near";
+    return {c, you, m: you - c.need, per: (you - c.need) / c.s.length, st};
+  });
+  const weak = res.length ? res.reduce((w,x) => x.per < w.per ? x : w, res[0]) : null;
+  const years = r.st === "same" && r.src === "hist" ? [0,1,2].map(k => r.c.every((c,j) => res[j].you >= c.y[k])) : null;
+  const blocked = blockedBy(r);
+  let cat, plan = null, inRange = false, demoted = false;
+  if (blocked.length) cat = "out";
+  else if (isWait(r)) cat = "wait";
+  else if (res.every(x => x.m >= 0)) cat = res.every(x => x.st === "safe") ? "safe" : "pass";
+  else {
+    /* 未達 116 預估：看最少要補幾級分。1～2 級分＝差一點，3 級分以上＝還有距離 */
+    plan = findPlan(r);
+    cat = plan && plan.t <= 2 ? "near" : "far";
+    inRange = res.every(x => x.you >= x.c.lo);
+  }
+  if (cat === "safe" && (r.st === "drop" || r.st === "add")) { cat = "pass"; demoted = true; }   /* 116 改了採計科目：不列為穩穩達標 */
+  return {r, res, cat, weak, years, plan, inRange, blocked, demoted};
+}
+
+function marginText(m){ return m > 0 ? `多 ${m} 分` : m === 0 ? "剛好達到" : `還差 ${-m} 分`; }
+function planText(p){ return p.z.map((v,i) => v ? `${SUBJ[i]} +${v}` : "").filter(Boolean).join("、"); }
+function subjLine(r){
+  if (!r.s1) return "";
+  const same = r.s1.join() === r.s2.join();
+  const nm = a => a.map(i => picks.has(i) ? `<b>${SUBJ[i]}</b>` : SUBJ[i]).join("、");
+  const nd = needs(r), h = hit(r);
+  const fit = picks.size ? `<div class="subj"><b>採計 ${nd.length} 科，其中 ${h} 科是你點選的有把握科目</b></div>` : "";
+  return `<div class="subj">116 採計科目：${nm(r.s1)}${same ? "（第一、二階段相同）" : `；第二階段加權採 ${nm(r.s2)}`}</div>${fit}`;
+}
+function condHTML(x){
+  const c = x.c, pct = c.need > 0 ? Math.min(100, Math.round(x.you / c.need * 100)) : 100;
+  const range = c.lo === c.hi ? `${c.need}` : `${c.lo}～${c.hi}`;
+  const tag = c.m === "x" ? `<span class="tag">換算</span>` : c.m === "i" ? `<span class="tag">粗估</span>` : "";
+  return `<div class="cd">
+    <div class="cd-top"><span class="lab">${esc(label(c))}${tag}</span><span class="res ${x.st}">${marginText(x.m)}</span></div>
+    <div class="barrow"><div class="bar" role="img" aria-label="你的分數是需要分數的 ${pct}%"><i class="${x.st}" style="width:${pct}%"></i></div><span class="pc">${pct}%</span></div>
+    <div class="cd-cap"><span>你 ${x.you} 分・116 預估需要 ${c.need} 分</span><span>可能範圍 ${range} 分</span></div>
+  </div>`;
+}
+function yearChips(e){
+  return ["113","114","115"].map((y,i) => `<span class="chip ${e.years[i] ? "ok" : "no"}">${y} 年${e.years[i] ? "會過" : "不會過"}</span>`);
+}
+function headHTML(e){
+  const r = e.r, k = keyOf(r), fav = favs.has(k);
+  return `<div class="ch"><div class="nm"><div class="school">${esc(r.school)}・${gName(r.g)}</div><div class="dept">${esc(r.dept)}</div></div>
+      <span class="pill ${e.cat}">${NAME[e.cat]}</span>
+      <button class="star" type="button" data-k="${esc(k)}" aria-pressed="${fav}" aria-label="${fav ? "取消收藏" : "收藏"} ${esc(r.school + r.dept)}">${fav ? "★" : "☆"}</button></div>`;
+}
+function plainCardHTML(e, text){
+  const r = e.r;
+  return `<article class="card ${e.cat}">${headHTML(e)}${subjLine(r)}<div class="summary">${text}</div>${r.q ? `<div class="chips"><span class="chip">115 名額 ${r.q}</span></div>` : ""}</article>`;
+}
+function changeHTML(r){
+  if (r.st !== "drop" && r.st !== "add") return "";
+  const parts = [];
+  if (r.rem.length) parts.push(`不再採計${names(r.rem)}`);
+  if (r.add.length) parts.push(`新增${names(r.add)}`);
+  let s = `116 年${parts.join("、")}。`;
+  if (r.c.some(c => c.m === "x")) s += "標「換算」的分數，是假設倍率和報名的人不變算出來的。";
+  if (r.c.some(c => c.m === "i")) s += "標「粗估」的科目沒有歷年門檻，是用這個系其他科目的水準估的，上下 3 級分都有可能。";
+  return `<div class="chg">${s}等 12 月簡章公布後要再確認。</div>`;
+}
+function oldHTML(r){
+  if (r.st === "same") {
+    return r.src === "hist"
+      ? `<details><summary>看 113～115 年門檻</summary><div class="tablewrap"><table class="hist"><thead><tr><th>項目</th><th>113</th><th>114</th><th>115</th><th>116 預估</th></tr></thead><tbody>${
+          r.c.map(c => `<tr><td>${esc(label(c))}</td><td>${c.y[0]}</td><td>${c.y[1]}</td><td>${c.y[2]}</td><td>${c.need}（${c.lo}～${c.hi}）</td></tr>`).join("")
+        }</tbody></table></div></details>`
+      : `<details><summary>資料說明</summary><p class="note">這個校系沒有完整的 113～115 年逐項門檻可以檢查（多半只有近一年），預估範圍已放寬。</p></details>`;
+  }
+  const hasY = r.oc.every(c => c.y);
+  return `<details><summary>看 115 年以前採計的科目</summary><div class="tablewrap"><table class="hist"><thead><tr><th>舊項目</th>${hasY ? "<th>113</th><th>114</th><th>115</th>" : ""}<th>照舊科目的預估</th></tr></thead><tbody>${
+    r.oc.map(c => `<tr><td>${esc(label(c))}</td>${hasY ? `<td>${c.y[0]}</td><td>${c.y[1]}</td><td>${c.y[2]}</td>` : ""}<td>${c.need}</td></tr>`).join("")
+  }</tbody></table></div></details>`;
+}
+function cardHTML(e){
+  const r = e.r, w = e.weak;
+  if (e.cat === "out") return plainCardHTML(e, `你不考${names(e.blocked)}，這個校系 116 年會採計，所以不能報。`);
+  if (e.cat === "wait") return plainCardHTML(e, r.st === "absent"
+    ? "116 年初階資料的這個群類裡沒有列出這個校系，可能停招、改名或改到其他群類，請以 116 簡章為準。"
+    : "沒有歷年門檻可以推估，只能先看 116 年採計哪些科目。等 12 月簡章公布倍率和名額後再判斷。");
+  let sum;
+  if (e.cat === "safe" || e.cat === "pass") sum = `全部達到 116 預估。最接近要求的是「${esc(label(w.c))}」，${marginText(w.m)}。`;
+  if (e.cat === "safe" && w.per >= 3) sum += " 你的分數比需要的高出不少，可以把一、兩個名額拿去挑戰更想讀的校系。";
+  else sum = `最需要補的是「${esc(label(w.c))}」，${marginText(w.m)}。`;
+  if (e.demoted) sum += " 這個校系 116 年改了採計科目，估計比較不確定，所以不列為「穩穩達標」。";
+  if (e.res.some(x => x.m === 0)) sum += " 有一項剛好達到，同分的人太多時要比篩選科目總和。";
+  let plan = "";
+  if (e.cat === "near" || e.cat === "far") {
+    const rng = e.inRange ? "每一項都還在可能範圍內，門檻下降也有機會。" : "有一項已低於可能範圍的下限，主要要靠補分。";
+    plan = e.plan
+      ? `<div class="plan ${e.cat}">最少再補 <b>${e.plan.t}</b> 級分，就全部達到 116 預估。例如：${planText(e.plan)}。${rng}</div>`
+      : `<div class="plan ${e.cat}">要全部達到 116 預估，至少要再補 9 級分以上。</div>`;
+  }
+  const chips = [];
+  if (r.st === "same") chips.push(`<span class="chip ok">116 科目和 115 年相同</span>`);
+  else chips.push(`<span class="chip warn">116 改科目</span>`);
+  if (r.cr === "B") chips.push(`<span class="chip ok">近三年資料齊全</span>`);
+  else if (r.cr === "C") chips.push(`<span class="chip">歷年資料較少，估得較粗</span>`);
+  else if (r.cr === "D" && r.st === "same") chips.push(`<span class="chip warn">採計可能有變動，以 12 月簡章為準</span>`);
+  if (e.years) chips.push(...yearChips(e));
+  else if (r.src !== "hist") chips.push(`<span class="chip">沒有歷年資料</span>`);
+  chips.push(`<span class="chip">篩選嚴格度：${r.tier}</span>`);
+  if (r.st === "same" && r.stab) chips.push(`<span class="chip ${r.stab === "變動大" ? "warn" : ""}">歷年門檻：${r.stab}</span>`);
+  if (r.low) chips.push(`<span class="chip warn">報名人數${r.low === "低" ? "少" : "偏少"}，門檻起伏可能大</span>`);
+  if (r.q) chips.push(`<span class="chip">115 名額 ${r.q}</span>`);
+  const prSub = needs(r).filter(i => prs[i] != null);
+  if (prSub.length && prSub.length === needs(r).length) {
+    const avg = Math.round(prSub.reduce((a,i) => a + prs[i], 0) / prSub.length);
+    chips.push(`<span class="chip">你的參採科目 PR 平均 ${avg}（純參考）</span>`);
+  }
+  return `<article class="card ${e.cat}">${headHTML(e)}${subjLine(r)}
+    <div class="summary">${sum}</div>${plan}${changeHTML(r)}
+    <div class="conds">${e.res.map(condHTML).join("")}</div>
+    <div class="chips">${chips.join("")}</div>
+    ${oldHTML(r)}
+  </article>`;
+}
+
+function sensHTML(rows){
+  const judged = rows.filter(r => !isWait(r) && !blockedBy(r).length);
+  const base = judged.filter(r => passAll(r, scores)).length;
+  const tr = SUBJ.map((s,i) => {
+    if (skip.has(i)) return `<tr><td>${s}</td><td>不考</td><td>不考</td></tr>`;
+    const up = scores.slice(), dn = scores.slice();
+    up[i] = Math.min(15, up[i] + 1); dn[i] = Math.max(0, dn[i] - 1);
+    const plus = judged.filter(r => !passAll(r, scores) && passAll(r, up)).length;
+    const minus = judged.filter(r => passAll(r, scores) && !passAll(r, dn)).length;
+    return `<tr><td>${s}</td><td>${scores[i] >= 15 ? "已滿分" : `多 ${plus} 個`}</td><td>${scores[i] <= 0 ? "—" : `少 ${minus} 個`}</td></tr>`;
+  }).join("");
+  const known = rows.filter(r => r.s1);
+  const tr2 = SUBJ.map((s,i) => `<tr><td>${s}</td><td>${known.filter(r => needs(r).includes(i)).length} 個</td><td>${known.filter(r => r.s1.includes(i)).length} 個</td></tr>`).join("");
+  return `<p class="note" style="margin:8px 0 0">現在有 ${base} 個校系每一項都達到 116 預估${state.g === "all" ? "" : `（${gName(state.g)}）`}。一次只改一科：</p>
+    <div class="tablewrap"><table class="hist"><thead><tr><th>科目</th><th>多 1 級分</th><th>少 1 級分</th></tr></thead><tbody>${tr}</tbody></table></div>
+    <p class="note" style="margin:10px 0 0">116 年有對到採計科目的 ${known.length} 個校系中，各科被採計的校系數（不考這一科，這些校系就不能報）：</p>
+    <div class="tablewrap"><table class="hist"><thead><tr><th>科目</th><th>第一或第二階段採計</th><th>其中第一階段篩選</th></tr></thead><tbody>${tr2}</tbody></table></div>`;
+}
+
+function syncSchools(){
+  const list = [...new Set(DATA.rows.filter(r => state.g === "all" || r.g === state.g).map(r => r.school))].sort((a,b) => a.localeCompare(b, "zh-Hant"));
+  if (state.school && !list.includes(state.school)) state.school = "";
+  $("school").innerHTML = `<option value="">全部學校</option>` + list.map(n => `<option value="${esc(n)}"${n === state.school ? " selected" : ""}>${esc(n)}</option>`).join("");
+}
+function skipUI(){
+  $("skips").innerHTML = SUBJ.map((s,i) => `<label><input type="checkbox" data-skip="${i}"${skip.has(i) ? " checked" : ""}>不考${s}</label>`).join("");
+  const taken = 5 - skip.size, pro = [3,4].filter(i => !skip.has(i)).length;
+  $("skipNote").innerHTML = (taken < 2 || pro < 1)
+    ? `<span class="warn-t">單群考生至少要考 2 科，而且至少 1 科專業科目，這樣勾不符合規定。</span>`
+    : "校系第一或第二階段採計的科目只要有一科沒考，就不能報。勾選後，那些校系會從清單和統計中排除。";
+  SUBJ.forEach((s,i) => {
+    const el = $("s" + i); if (!el) return;
+    el.disabled = skip.has(i); el.closest(".sc").classList.toggle("off", skip.has(i));
+    el.closest(".sc").querySelectorAll("button").forEach(b => b.disabled = skip.has(i));
+  });
+  if (skip.size) $("skipBox").open = true;
+}
+
+const CATTX = {safe:"保底", pass:"適中", near:"挑戰"};
+function makePlan(all, mode){
+  const quota = mode === "bal" ? {near:2, pass:2, safe:2} : {near:1, pass:2, safe:3};
+  const P = e => e.r.p == null ? 9 : e.r.p;
+  const pool = {
+    safe: all.filter(e => e.cat === "safe").sort((a,b) => P(a) - P(b)),   /* 保底也挑要求高的，避免高分低就 */
+    pass: all.filter(e => e.cat === "pass").sort((a,b) => P(a) - P(b)),
+    near: all.filter(e => e.cat === "near").sort((a,b) => (a.plan ? a.plan.t : 9) - (b.plan ? b.plan.t : 9) || P(a) - P(b))
+  };
+  const out = [], used = new Set(), schools = new Set();
+  const take = (cat, want, strictSchool) => {
+    for (const e of pool[cat]) {
+      if (want <= 0) break;
+      const k = keyOf(e.r); if (used.has(k)) continue;
+      if (strictSchool && schools.has(e.r.school)) continue;
+      used.add(k); schools.add(e.r.school); out.push({e, role: cat}); want--;
+    }
+    return want;
+  };
+  let short = {};
+  for (const c of ["near","pass","safe"]) { let w = take(c, quota[c], true); if (w > 0) w = take(c, w, false); short[c] = w; }
+  /* 某一類不夠時，往相鄰的類別補：挑戰不足補適中，保底不足補適中 */
+  for (const c of ["near","safe"]) if (short[c] > 0) short[c] = take("pass", short[c], false);
+  return {out, short};
+}
+function planHTML(all){
+  const {out, short} = makePlan(all, planMode);
+  planKeys = out.map(x => keyOf(x.e.r));
+  if (!out.length) return `<p class="empty">目前的條件下找不到可以排的校系。可以放寬群別或清除點選的科目。</p>`;
+  const cnt = {near:0, pass:0, safe:0}; out.forEach(x => cnt[x.e.cat]++);
+  const miss = 6 - out.length;
+  const items = out.map(x => {
+    const e = x.e, r = e.r, w = e.weak;
+    const tag = x.e.cat === x.role ? `<span class="pill ${e.cat}">${NAME[e.cat]}</span>` : `<span class="pill ${e.cat}">${NAME[e.cat]}</span>`;
+    const detail = w ? `${esc(label(w.c))}：${marginText(w.m)}` : "";
+    const chg = e.demoted ? "（116 年改了採計科目，較不確定）" : "";
+    return `<div class="it ${e.cat}"><div class="tx"><span class="school">${esc(r.school)}・${gName(r.g)}</span><b>${esc(r.dept)}</b>${detail}${chg}</div>${tag}</div>`;
+  }).join("");
+  let adv = `搭配結果：挑戰 ${cnt.near} 個、適中 ${cnt.pass} 個、保底 ${cnt.safe} 個。`;
+  if (miss > 0) adv += ` 只排得出 ${out.length} 個，還差 ${miss} 個：符合條件的校系不夠，可以放寬群別或科目。`;
+  if (cnt.safe === 0) adv += " 沒有保底，可能一個都過不了，建議放寬條件找保底。";
+  return `<div class="mix"><span class="chip warn">挑戰 ${cnt.near}</span><span class="chip">適中 ${cnt.pass}</span><span class="chip ok">保底 ${cnt.safe}</span></div>${items}<div class="adv${cnt.safe === 0 || miss > 0 ? " bad" : ""}">${adv}</div>`;
+}
+function favMixHTML(all){
+  const mine = all.filter(e => favs.has(keyOf(e.r)));
+  if (!favs.size) return `<p class="note">還沒有收藏。點校系卡片右上角的 ☆ 就會加入。</p>`;
+  const c = {safe:0, pass:0, near:0, other:0}; let chg = 0;
+  mine.forEach(e => { if (c[e.cat] !== undefined && e.cat !== "other") c[e.cat]++; else c.other++; if (e.demoted) chg++; });
+  const hidden = favs.size - mine.length;
+  const tips = [];
+  if (favs.size < 6) tips.push(`目前收藏 ${favs.size} 個，志願最多可以填 6 個，還可以加 ${6 - favs.size} 個。`);
+  if (favs.size > 6) tips.push(`收藏有 ${favs.size} 個，超過 6 個，要再刪掉 ${favs.size - 6} 個。`);
+  if (mine.length && c.safe === 0) tips.push("沒有「穩穩達標」的保底，可能一個都過不了。");
+  if (c.safe > 3) tips.push("保底超過 3 個，可能高分低就，可以換 1 個挑戰。");
+  if (c.near > 3) tips.push("「差一點」的挑戰超過 3 個，這幾個要補分才達標，建議減少。");
+  if (c.other) tips.push(`有 ${c.other} 個是「還有距離」「不能報」或「還不能判斷」，不算進搭配。`);
+  if (chg) tips.push(`${chg} 個校系 116 年改了採計科目，估計比較不確定，不要當保底。`);
+  if (hidden > 0) tips.push(`另有 ${hidden} 個收藏被目前的群別或科目篩選藏起來了。`);
+  if (!tips.length) tips.push("搭配合理。");
+  return `<div class="mix"><span class="chip warn">挑戰 ${c.near}</span><span class="chip">適中 ${c.pass}</span><span class="chip ok">保底 ${c.safe}</span></div><ul>${tips.map(t => `<li>${t}</li>`).join("")}</ul>`;
+}
+function render(){
+  const q = state.q.trim();
+  const rows = DATA.rows.filter(r => (state.g === "all" || r.g === state.g) && pickOK(r));
+  const all = rows.map(evalRow);
+  const counts = {safe:0,pass:0,near:0,far:0,wait:0,out:0};
+  all.forEach(e => counts[e.cat]++);
+  if (state.cat === "out" && !counts.out) state.cat = null;
+  $("tiles").innerHTML = ["safe","pass","near","far"].map(c =>
+    `<button type="button" class="tile t-${c}" data-cat="${c}" aria-pressed="${state.cat === c}"><b>${counts[c]}</b><span>${NAME[c]}</span></button>`).join("") +
+    `<button type="button" class="tile t-wait" data-cat="wait" aria-pressed="${state.cat === "wait"}"><span>${NAME.wait}</span><b>${counts.wait}</b><span>個校系</span></button>`;
+  $("sens").innerHTML = sensHTML(rows);
+  let list = all;
+  if (q) list = list.filter(e => (e.r.school + e.r.dept).includes(q));
+  if (state.school) list = list.filter(e => e.r.school === state.school);
+  if (state.favOnly) list = list.filter(e => favs.has(keyOf(e.r)));
+  if (state.cat) list = list.filter(e => e.cat === state.cat);
+  const narrowed = !!(q || state.school || state.favOnly || state.cat);
+  if (!narrowed) list = list.filter(e => e.cat !== "far" && e.cat !== "wait" && e.cat !== "out");
+  const P = e => e.r.p == null ? 9 : e.r.p, M = e => e.weak ? e.weak.per : -99;
+  const Fit = e => { const n = needs(e.r).length; return n ? hit(e.r) / n : 0; };
+  list.sort((a,b) => ORDER[a.cat] - ORDER[b.cat] || (state.sort === "fit" ? Fit(b) - Fit(a) : 0) || (state.sort === "margin" ? M(b) - M(a) : P(a) - P(b)) || P(a) - P(b));
+  const shown = list.slice(0, state.shown);
+  $("list").innerHTML = shown.length ? shown.map(cardHTML).join("") : `<p class="empty">沒有符合的校系。</p>`;
+  const rest = list.length - shown.length;
+  $("more").hidden = rest <= 0;
+  $("more").textContent = `再顯示 ${Math.min(PAGE, rest)} 個（還有 ${rest} 個）`;
+  let info = narrowed
+    ? `符合條件的校系 ${list.length} 個。`
+    : `下面列出穩穩達標、達標但不穩、差一點，共 ${list.length} 個。「還有距離」${counts.far} 個、「還不能判斷」${counts.wait} 個，點上面的格子就能看。`;
+  if (picks.size) info = `只看${{any:"採計其中任一科",all:"每科都採計",only:"只採計這些科"}[pickMode]}：${names([...picks].sort())}。` + info;
+  $("info").textContent = info;
+  $("picks").innerHTML = SUBJ.map((s,i) => `<button type="button" class="pick" data-pick="${i}" aria-pressed="${picks.has(i)}">${s}</button>`).join("");
+  document.querySelectorAll("[data-pm]").forEach(b => b.setAttribute("aria-pressed", b.dataset.pm === pickMode));
+  $("pickClear").hidden = !picks.size;
+  $("planOut").innerHTML = planHTML(all);
+  $("favMix").innerHTML = favMixHTML(all);
+  document.querySelectorAll("[data-plm]").forEach(b => b.setAttribute("aria-pressed", b.dataset.plm === planMode));
+  if (counts.out) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "linkbtn"; b.dataset.cat = "out";
+    b.textContent = state.cat === "out" ? "回到全部" : `看這 ${counts.out} 個校系`;
+    $("info").append(` 因為不考${names([...skip].sort())}，有 ${counts.out} 個校系不能報，已排除。`, b);
+  }
+  document.querySelectorAll("[data-g]").forEach(b => b.setAttribute("aria-pressed", b.dataset.g === state.g));
+  document.querySelectorAll("[data-sort]").forEach(b => b.setAttribute("aria-pressed", b.dataset.sort === state.sort));
+  $("favOnly").setAttribute("aria-pressed", state.favOnly);
+  $("favOnly").textContent = state.favOnly ? "★ 只看收藏（點選取消）" : `☆ 只看收藏（${favs.size}）`;
+  $("demo").hidden = !isDemo;
+}
+
+function buildScores(){
+  $("scores").innerHTML = SUBJ.map((s,i) => `<div class="sc"><label for="s${i}">${s}</label>
+    <div class="step"><button type="button" data-d="-1" data-i="${i}" aria-label="${s}減一">−</button>
+    <input id="s${i}" type="number" inputmode="numeric" min="0" max="15" value="${scores[i]}">
+    <button type="button" data-d="1" data-i="${i}" aria-label="${s}加一">＋</button></div></div>`).join("");
+  $("prBox").innerHTML = SUBJ.map((s,i) => `<label>${s} <input id="pr${i}" type="number" inputmode="numeric" min="0" max="100" placeholder="—" value="${prs[i] ?? ""}" style="width:64px;height:34px;border:1px solid var(--line);border-radius:8px;text-align:center;background:var(--surface);color:var(--ink)"></label>`).join("");
+  skipUI();
+}
+function setScore(i, v){
+  v = clamp(v);
+  scores[i] = v; $("s" + i).value = v; isDemo = false; store.set("scores", scores); render();
+}
+function refilter(){ state.shown = PAGE; render(); }
+document.addEventListener("click", ev => {
+  const t = ev.target.closest("button"); if (!t) return;
+  if (t.dataset.d) setScore(+t.dataset.i, scores[+t.dataset.i] + Number(t.dataset.d));
+  else if (t.dataset.g) { state.g = t.dataset.g; store.set("g", state.g); syncSchools(); refilter(); }
+  else if (t.dataset.plm) { planMode = t.dataset.plm; store.set("planMode", planMode); render(); }
+  else if (t.id === "planFav") { planKeys.forEach(k => favs.add(k)); store.set("favs", [...favs]); render(); }
+  else if (t.dataset.pick !== undefined) { const i = +t.dataset.pick; picks.has(i) ? picks.delete(i) : picks.add(i); store.set("picks", [...picks]); refilter(); }
+  else if (t.dataset.pm) { pickMode = t.dataset.pm; store.set("pickMode", pickMode); refilter(); }
+  else if (t.id === "pickClear") { picks.clear(); store.set("picks", []); refilter(); }
+  else if (t.dataset.sort) { state.sort = t.dataset.sort; refilter(); }
+  else if (t.dataset.cat) { state.cat = state.cat === t.dataset.cat ? null : t.dataset.cat; refilter(); }
+  else if (t.dataset.k) { const k = t.dataset.k; favs.has(k) ? favs.delete(k) : favs.add(k); store.set("favs", [...favs]); render(); }
+  else if (t.id === "favOnly") { state.favOnly = !state.favOnly; refilter(); }
+  else if (t.id === "more") { state.shown += PAGE; render(); }
+  else if (t.id === "print") { state.shown = Infinity; render(); window.print(); }
+  else if (t.id === "reset") { scores = DEMO.slice(); isDemo = true; store.set("scores", null); buildScores(); render(); }
+});
+document.addEventListener("change", ev => {
+  const m = /^s(\d)$/.exec(ev.target.id || "");
+  if (m) setScore(+m[1], ev.target.value);
+  else if (/^pr(\d)$/.test(ev.target.id || "")) {
+    const i = +ev.target.id.slice(2), v = ev.target.value === "" ? null : Math.max(0, Math.min(100, Math.round(+ev.target.value)));
+    prs[i] = Number.isFinite(v) ? v : null; ev.target.value = prs[i] ?? ""; store.set("prs", prs); render();
+  }
+  else if (ev.target.id === "school") { state.school = ev.target.value; refilter(); }
+  else if (ev.target.dataset.skip !== undefined) {
+    const i = +ev.target.dataset.skip;
+    ev.target.checked ? skip.add(i) : skip.delete(i);
+    store.set("skip", [...skip]); skipUI(); refilter();
+  }
+});
+$("q").addEventListener("input", ev => { state.q = ev.target.value; refilter(); });
+
+(function staticText(){
+  const n = st => DATA.rows.filter(r => r.st === st).length;
+  $("g-match").textContent = `這個系統的 ${DATA.rows.length} 個校系中，${DATA.rows.filter(r => r.s1).length} 個對得上：${n("same")} 個科目和 115 年相同、${n("drop")} 個只少採科目、${n("add")} 個有新增科目、${n("nodata")} 個沒有歷年門檻；另外 ${n("absent")} 個在 116 年的資料裡找不到。`;
+  $("extraSum").textContent = `其他 116 年招收 09 商管、21 資管的國立校系（${DATA.extra.length} 個）`;
+  $("extra").innerHTML = `<thead><tr><th>校系</th><th>第一階段篩選</th><th>第二階段加權</th></tr></thead><tbody>` + DATA.extra.map(x =>
+    `<tr><td>${esc(x.school)}<br>${esc(x.dept)}（${x.g}${x.sys === "二專" ? "・二專" : ""}）</td><td>${names(x.s1)}</td><td>${names(x.s2)}</td></tr>`).join("") + `</tbody>`;
+})();
+if (!["all","09","21"].includes(state.g)) state.g = "all";
+syncSchools(); buildScores(); render();
+</script>
+</body>
+</html>
