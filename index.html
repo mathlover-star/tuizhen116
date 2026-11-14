@@ -9,7 +9,7 @@
 :root{
   /* 版面：單欄卡片清單，手機優先；不載入任何外部資源，可離線使用 */
   --bg:#f3f5f7; --surface:#ffffff; --ink:#18222c; --muted:#5a6672; --line:#dbe1e7; --accent:#1c5a92;
-  --safe:#1d8a4e; --pass:#b47817; --near:#cf5f1e; --far:#7f8a95; --wait:#5567a8;
+  --hot:#c62828; --safe:#1d8a4e; --pass:#b47817; --near:#cf5f1e; --far:#7f8a95; --wait:#5567a8;
   --safe-bg:#e6f4ec; --pass-bg:#fbf1de; --near-bg:#fbe9df; --far-bg:#eceff2; --wait-bg:#e9ecf7;
   --font-body:"PingFang TC","Noto Sans TC","Microsoft JhengHei","Heiti TC",system-ui,sans-serif;
   --font-display:"Songti TC","Noto Serif TC","PMingLiU",serif;
@@ -18,14 +18,14 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#0f1418; --surface:#182027; --ink:#e5ecf2; --muted:#9daab6; --line:#2a343e; --accent:#74aee3;
-    --safe:#43c07c; --pass:#e3a744; --near:#f08b4d; --far:#8a96a2; --wait:#9aa8e0;
+    --hot:#ff6b6b; --safe:#43c07c; --pass:#e3a744; --near:#f08b4d; --far:#8a96a2; --wait:#9aa8e0;
     --safe-bg:#16301f; --pass-bg:#33280f; --near-bg:#3a2214; --far-bg:#232b33; --wait-bg:#222842;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#0f1418; --surface:#182027; --ink:#e5ecf2; --muted:#9daab6; --line:#2a343e; --accent:#74aee3;
-  --safe:#43c07c; --pass:#e3a744; --near:#f08b4d; --far:#8a96a2; --wait:#9aa8e0;
+  --hot:#ff6b6b; --safe:#43c07c; --pass:#e3a744; --near:#f08b4d; --far:#8a96a2; --wait:#9aa8e0;
   --safe-bg:#16301f; --pass-bg:#33280f; --near-bg:#3a2214; --far-bg:#232b33; --wait-bg:#222842;
   color-scheme:dark;
 }
@@ -122,6 +122,7 @@ h2{font-size:1.1rem;margin:0;text-wrap:balance}
 .chip{font-size:.78rem;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--muted);background:var(--surface)}
 .chip.ok{color:var(--safe);border-color:var(--safe)} .chip.no{color:var(--near);border-color:var(--near)}
 .chip.warn{color:var(--pass);border-color:var(--pass)}
+.chip.hi{color:var(--hot);border-color:var(--hot);font-weight:600}
 details{font-size:.9rem}
 summary{cursor:pointer;color:var(--accent);font-weight:500}
 .hist{width:100%;border-collapse:collapse;margin-top:6px;font-variant-numeric:tabular-nums}
@@ -502,6 +503,26 @@ function oldHTML(r){
     r.oc.map(c => `<tr><td>${esc(label(c))}</td>${hasY ? `<td>${c.y[0]}</td><td>${c.y[1]}</td><td>${c.y[2]}</td>` : ""}<td>${c.need}</td></tr>`).join("")
   }</tbody></table></div></details>`;
 }
+const RISK = {"臺中科技大學|09|國際貿易與經營系":{"h":[[112,371,144,2.58,1],[113,213,255,0.84,0],[114,265,265,1,0]]},"臺中科技大學|09|財政稅務系":{"h":[[112,203,117,1.74,1],[113,571,220,2.6,1],[114,289,204,1.42,1]]},"臺中科技大學|09|財務金融系":{"h":[[112,450,234,1.92,1],[113,486,275,1.77,1],[114,393,225,1.75,1]]},"臺中科技大學|09|會計資訊系":{"h":[[112,246,270,0.91,0],[113,315,270,1.17,1],[114,304,270,1.13,1]]},"臺中科技大學|21|資訊管理系":{"h":[[112,456,192,2.38,1],[113,232,156,1.49,1],[114,206,156,1.32,1]]},"臺中科技大學|09|流通管理系":{"h":[[112,257,114,2.25,1],[113,313,114,2.75,1],[114,220,96,2.29,1]]},"臺中科技大學|21|應用統計系":{"h":[[112,80,69,1.16,1],[113,46,80.5,0.57,0],[114,148,56,2.64,1]]},"臺中科技大學|09|保險金融管理系":{"h":[[112,234,150,1.56,1],[113,201,250,0.8,0],[114,476,260,1.83,1]]},"臺中科技大學|09|企業管理系":{"h":[[112,188,150,1.25,1],[113,308,150,2.05,1],[114,238,156,1.53,1]]},"雲林科技大學|09|工業工程與管理系":{"h":[[114,469,340,1.38,1],[115,466,310,1.5,1]],"p":0.2,"pd":0.12,"pu":0.29},"雲林科技大學|09|企業管理系":{"h":[[114,280,170,1.65,1],[115,238,190,1.25,1]],"p":0.29,"pd":0.18,"pu":0.41},"雲林科技大學|09|財務金融系":{"h":[[114,441,280,1.57,1],[115,367,310,1.18,1]],"p":0.32,"pd":0.21,"pu":0.44},"雲林科技大學|09|會計系":{"h":[[114,229,238,0.96,0],[115,242,224,1.08,1]],"p":0.38,"pd":0.25,"pu":0.51},"雲林科技大學|09|國際管理學士學位學程":{"h":[[114,111,66,1.68,1],[115,156,48,3.25,1]],"p":0.03,"pd":0.02,"pu":0.05},"雲林科技大學|09|應用外語系":{"h":[[114,83,24,3.46,1],[115,31,8,3.88,1]],"p":0.02,"pd":0.01,"pu":0.03},"雲林科技大學|09|文化資產維護系":{"h":[[114,134,66,2.03,1],[115,71,54,1.31,1]],"p":0.26,"pd":0.16,"pu":0.37},"雲林科技大學|21|資訊管理系":{"h":[[114,215,168,1.28,1],[115,152,168,0.9,0]],"p":0.5,"pd":0.65,"pu":0.37}};
+function riskChip(r){
+  const e = RISK[r.school + "|" + r.g + "|" + r.dept]; if (!e) return "";
+  const h = e.h, last = h[h.length - 1], warn = Math.min(...h.map(x => x[3])) <= 1.1;
+  const lv = !warn ? "低" : e.p != null && e.p >= 0.4 ? "高" : "中";
+  const fact = `${last[0]} 年報名 ${last[1]} 人，學校最多審 ${Math.round(last[2])} 人（${last[4] ? "有" : "沒有"}篩掉人）。`;
+  const txt = (lv ? `門檻變動風險：${lv}。` : "") + (warn
+    ? `這個系第一關的人數年年不同，門檻變動較大。${fact}若 116 年報名變多或名額變少，門檻可能比預估高，建議多留一些分數空間。`
+    : `這個系近年第一關都有篩掉人，門檻比較穩定。${fact}`);
+  return `<span class="chip ${lv === "高" ? "hi" : lv === "中" ? "warn" : "ok"}" title="只是提醒，不是預測；人數來自學校自己公布的報名資料，116 年名額要等 12 月簡章">提醒：${txt}</span>`;
+}
+function strengthChip(r){
+  if (!r.c || !r.c.length || !r.c[0].s) return "";
+  const s0 = r.c[0].s, keys = ["guo","eng","mB","p1","p2"];
+  const tops = s0.map(i => ({ i, top: RANK[115][keys[i]][clamp(scores[i])] }));
+  const avg = tops.reduce((a,x) => a + x.top, 0) / tops.length;
+  if (avg > 20) return "";
+  const nm = tops.map(x => `${SUBJ[x.i]}（前 ${x.top < 0.1 ? "0.1" : x.top.toFixed(x.top < 10 ? 1 : 0)}%）`).join("、");
+  return `<span class="chip ok" title="依 115 年全國人數；只說明你在這些科目的位置，不是錄取機率">你的強項：第一關看${nm}，你的級分在全國排得很前面</span>`;
+}
 function cardHTML(e){
   const r = e.r, w = e.weak;
   if (e.cat === "out") return plainCardHTML(e, e.blocked.length ? `你不考${names(e.blocked)}，這個校系 116 年會採計，所以不能報。` : `這個校系採計的${names(e.zero)}都是 0 分（缺考也算 0 分）。採計科目有 2 科以上是 0 分，就不能通過第一階段。`);
@@ -532,6 +553,7 @@ function cardHTML(e){
   chips.push(`<span class="chip">篩選嚴格度：${r.tier}</span>`);
   if (r.st === "same" && r.stab) chips.push(`<span class="chip ${r.stab === "變動大" ? "warn" : ""}">歷年門檻：${r.stab}</span>`);
   if (r.low) chips.push(`<span class="chip warn">報名人數${r.low === "低" ? "少" : "偏少"}，門檻起伏可能大</span>`);
+  { const rc = riskChip(r); if (rc) chips.push(rc); const sc_ = strengthChip(r); if (sc_) chips.push(sc_); }
   if (r.tie && r.tie.length) {
     const lastM = e.res.length ? e.res[e.res.length - 1].m : null;
     const ts_ = r.tsrc, srcTx = ts_ ? `來源：${ts_.type}${ts_.date ? "，" + esc(ts_.date) : ""}${ts_.formal ? "" : "，尚未用簡章核實"}` : "";
@@ -667,7 +689,8 @@ function render(){
   const rows = DATA.rows.filter(r => (state.g === "all" || r.g === state.g) && pickOK(r));
   const all = rows.map(evalRow);
   const counts = {safe:0,pass:0,near:0,far:0,wait:0,out:0};
-  all.forEach(e => counts[e.cat]++);
+  const scope = all.filter(e => (!q || e.r.dept === q) && (!state.school || e.r.school === state.school) && (!state.favOnly || favs.has(keyOf(e.r))));
+  scope.forEach(e => counts[e.cat]++);
   if (state.cat === "out" && !counts.out) state.cat = null;
   $("tiles").innerHTML = ["safe","pass","near","far"].map(c =>
     `<button type="button" class="tile t-${c}" data-cat="${c}" aria-pressed="${state.cat === c}"><b>${counts[c]}</b><span>${NAME[c]}</span></button>`).join("") +
@@ -684,13 +707,16 @@ function render(){
   const Fit = e => { const n = needs(e.r).length; return n ? hit(e.r) / n : 0; };
   list.sort((a,b) => ORDER[a.cat] - ORDER[b.cat] || (state.sort === "fit" ? Fit(b) - Fit(a) : 0) || (state.sort === "margin" ? M(b) - M(a) : P(a) - P(b)) || P(a) - P(b));
   const shown = list.slice(0, state.shown);
-  $("list").innerHTML = shown.length ? shown.map(cardHTML).join("") : `<p class="empty">沒有符合的校系。</p>`;
+  const conds = [state.school ? "學校：" + state.school : "", q ? "科系：" + q : "", state.favOnly ? "只看收藏" : "", state.cat ? "類別：" + NAME[state.cat] : "", picks.size ? "科目：" + ({any:"採計其中任一科",all:"每科都採計",only:"只採計這些科"}[pickMode]) + names([...picks].sort()) : "", state.g !== "all" ? "群別：" + (state.g === "09" ? "商管" : "資管") : ""].filter(Boolean);
+  const pickHint = picks.size && pickMode === "all" ? `<br>「每科都採計」是指校系要同時採計你點的全部 ${picks.size} 科；每個校系最多只採計 4 科，點太多科就會是 0 個。可改成「採計其中任一科」，或少點幾科。` : "";
+  $("list").innerHTML = shown.length ? shown.map(cardHTML).join("") : `<p class="empty">沒有符合的校系。<br>目前套用的條件：${conds.length ? esc(conds.join("、")) : "無"}。${pickHint}<br><button type="button" class="linkbtn" id="clearAllFilters">清除所有條件</button></p>`;
   const rest = list.length - shown.length;
   $("more").hidden = rest <= 0;
   $("more").textContent = `再顯示 ${Math.min(PAGE, rest)} 個（還有 ${rest} 個）`;
   let info = narrowed
-    ? `符合條件的校系 ${list.length} 個。`
+    ? `符合條件的校系 ${list.length} 個。${conds.length ? "（目前套用：" + conds.join("、") + "）" : ""}`
     : `下面列出穩穩達標、達標但不穩、差一點，共 ${list.length} 個。「還有距離」${counts.far} 個、「還不能判斷」${counts.wait} 個，點上面的格子就能看。`;
+  if (picks.size === 5 && pickMode === "only") info = "（五科全點，等於不限制。）" + info;
   if (picks.size) info = `只看${{any:"採計其中任一科",all:"每科都採計",only:"只採計這些科"}[pickMode]}：${names([...picks].sort())}。` + info;
   $("info").textContent = info;
   $("picks").innerHTML = SUBJ.map((s,i) => `<button type="button" class="pick" data-pick="${i}" aria-pressed="${picks.has(i)}">${s}</button>`).join("");
@@ -860,6 +886,7 @@ document.addEventListener("click", ev => {
   else if (t.dataset.plm) { planMode = t.dataset.plm; store.set("planMode", planMode); render(); }
   else if (t.id === "planFav") { planKeys.forEach(k => favs.add(k)); store.set("favs", [...favs]); render(); }
   else if (t.dataset.pick !== undefined) { const i = +t.dataset.pick; picks.has(i) ? picks.delete(i) : picks.add(i); store.set("picks", [...picks]); refilter(); }
+  else if (t.id === "clearAllFilters") { state.school = ""; state.dept = ""; state.favOnly = false; state.cat = null; picks.clear(); store.set("picks", []); if ($("school")) $("school").value = ""; syncDepts(); if ($("favOnly")) $("favOnly").setAttribute("aria-pressed", "false"); refilter(); }
   else if (t.dataset.pm) { pickMode = t.dataset.pm; store.set("pickMode", pickMode); refilter(); }
   else if (t.id === "pickClear") { picks.clear(); store.set("picks", []); refilter(); }
   else if (t.dataset.sort) { state.sort = t.dataset.sort; refilter(); }
