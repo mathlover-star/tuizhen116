@@ -443,7 +443,10 @@ function evalRow(r){
     cat = plan && plan.t <= 2 ? "near" : "far";
     inRange = res.every(x => x.you >= x.c.lo);
   }
-  if (cat === "safe" && (r.st === "drop" || r.st === "add")) { cat = "pass"; demoted = true; }   /* 116 改了採計科目：不列為穩穩達標 */
+  /* 採計科目全部已是滿級分：分數已到頂、沒有可以再補的空間，各項又都達到預估 → 視為穩穩達標，不因改科目而降級 */
+  const topped = needs(r).length > 0 && needs(r).every(i => scores[i] >= 15);
+  if (topped && cat === "pass") cat = "safe";
+  if (!topped && cat === "safe" && (r.st === "drop" || r.st === "add")) { cat = "pass"; demoted = true; }   /* 116 改了採計科目：不列為穩穩達標 */
   return {r, res, cat, weak, years, plan, inRange, blocked, zero, demoted};
 }
 
@@ -530,10 +533,16 @@ function cardHTML(e){
     ? "116 年初階資料的這個群類裡沒有列出這個校系，可能停招、改名或改到其他群類，請以 116 簡章為準。"
     : "沒有歷年門檻可以推估，只能先看 116 年採計哪些科目。等 12 月簡章公布倍率和名額後再判斷。");
   let sum;
-  if (e.cat === "safe" || e.cat === "pass") sum = `全部達到 116 預估。最接近要求的是「${esc(label(w.c))}」，${marginText(w.m)}。`;
-  if (e.cat === "safe" && w.per >= 3) sum += " 你的分數比需要的高出不少，可以把一、兩個名額拿去挑戰更想讀的校系。";
-  else sum = `最需要補的是「${esc(label(w.c))}」，${marginText(w.m)}。`;
-  if (e.demoted) sum += " 這個校系 116 年改了採計科目，估計比較不確定，所以不列為「穩穩達標」。";
+  const maxed = c => c.s.every(i => scores[i] >= 15), allMax = needs(r).length > 0 && needs(r).every(i => scores[i] >= 15);
+  if (e.cat === "safe" || e.cat === "pass") {
+    if (e.demoted) sum = "這個校系 116 年改了採計科目，估計比較不確定，要等 12 月簡章確認，所以不列為「穩穩達標」。";
+    else sum = "";
+    if (allMax) sum += " 你的採計科目都已經是滿級分，沒有可以再補的空間，各項都達到 116 預估。";
+    else if (w.m === 0 && maxed(w.c)) sum += ` 全部達到 116 預估。「${esc(label(w.c))}」你已經是滿級分，這一項不用再補。`;
+    else sum += ` 全部達到 116 預估。最接近要求的是「${esc(label(w.c))}」，${marginText(w.m)}。`;
+    if (e.cat === "safe" && w.per >= 3) sum += " 你的分數比需要的高出不少，可以把一、兩個名額拿去挑戰更想讀的校系。";
+    sum = sum.trim();
+  } else sum = `最需要補的是「${esc(label(w.c))}」，${marginText(w.m)}。`;
   if (e.res.length && e.res[e.res.length-1].m === 0) sum += " 最後一關剛好達到，如果同分的人太多，還要比學校自選科目的級分總和（看正式簡章）。";
   let plan = "";
   if (e.cat === "near" || e.cat === "far") {
