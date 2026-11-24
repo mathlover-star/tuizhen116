@@ -175,11 +175,15 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
     <details class="noprint" style="margin-top:8px">
       <summary>各科 PR 值（輸入級分後自動算，也可自己改）</summary>
       <div class="skips" id="prBox"></div>
-      <p class="note" style="margin:6px 0 2px">PR 會依你的級分和 115 年全國人數表自動算出（灰色數字）；如果你有成績單或模考上的 PR，可以直接填入覆蓋，留白就用自動值。PR 只用來對照，不會換算成機率，也不影響排序。另外提醒：116 年同級分超額篩選改由各校系自行選定科目——從第一、第二階段參採的統測科目中選最多四科加總，不再一律比五科總級分。各校系比哪幾科要看正式簡章；大方向是偏科的同學在科目對得上的校系較有利。</p>
+      <p class="note" id="prExplain" style="margin-top:6px"></p>
+      <p class="note">自動 PR 是把你的<b>模考</b>級分，依校內排名換成「可能的統測級分」再看全國位置。換算時除了這一科，也參考你另外四科：例如同樣數學模考 10 級分，其他科都很高的同學，推估會比較高。依據：116 屆 332 位同學模考、113 屆學長姐真實統測、115 年全國人數表。<b>這個換算還沒有用同一屆學生的模考和統測核對過</b>，假設本屆和 113 屆學長姐程度相近，只能當參考，學校不會用它判斷你能不能過。如果你已經有統測成績，請直接輸入真實 PR。</p>
+      <p class="note" style="margin:6px 0 2px">PR 會依你輸入的<b>模考級分</b>自動換算（灰色數字）：先看你在全校模考排第幾，再對到學長姐統測同一排名的級分，換成全國 PR。模考難度和統測不同（例如模考英文比統測難很多），所以同樣的級分，各科換算出的 PR 會不一樣。這是粗估；有正式統測成績或成績單上的 PR 時，可以直接填入覆蓋，留白就用自動值。PR 只用來對照，不會換算成機率，也不影響排序。另外提醒：116 年同級分超額篩選改由各校系自行選定科目——從第一、第二階段參採的統測科目中選最多四科加總，不再一律比五科總級分。各校系比哪幾科要看正式簡章；大方向是偏科的同學在科目對得上的校系較有利。</p>
     </details>
     <details class="noprint" id="rankBox" style="margin-top:8px">
       <summary>你的級分在全國排前百分之幾？（113～115 年官方人數表）</summary>
+      <p class="note">下表把你輸入的級分當成「統測級分」來看全國位置；如果你輸入的是模考級分，請以上面的各科 PR 為準。</p>
       <div id="rankOut" style="margin-top:8px"></div>
+      <p class="note" id="prNote"></p>
       <p class="note" style="margin:6px 0 0">依 113、114、115 學年度統測官方「成績人數累計表」（全國到考者，數學為數學 B，專業科目為商管外語群專一、商業與管理群專二）換算，「前 X%」含同級分的人。同一個級分在不同年度的位置不同，是因為當年考題難易不同。這只說明你的級分在全國的位置，不是各校系的錄取機率；各年考題難易不同，同一個級分在不同年度的位置會不一樣。</p>
     </details>
     <details class="noprint" id="skipBox" style="margin-top:8px">
@@ -223,10 +227,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 
   <section class="panel plan6 noprint" aria-labelledby="h-plan">
     <h2 id="h-plan">幫我排 6 個志願</h2>
-    <p class="note" style="margin:4px 0 8px">依你上面的分數、群別和點選的科目，自動排出搭配。不會改動你的收藏。</p>
-    <div class="seg" id="planMode" role="group" aria-label="搭配方式">
-      <button type="button" data-plm="safe3" aria-pressed="true">求穩：1 挑戰＋2 適中＋3 保底</button>
-      <button type="button" data-plm="bal" aria-pressed="false">均衡：2 挑戰＋2 適中＋2 保底</button>
+    <p class="note" style="margin:4px 0 8px">從你願意讀的校系裡排：先保留想挑戰的，再用最少的名額把「至少通過一個第一階段」的機會拉高，也避免太多志願都靠同一科剛好過。不會改動你的收藏。</p>
+    <div class="seg" id="planSrc" role="group" aria-label="從哪些校系排">
+      <button type="button" data-pls="fav" aria-pressed="true">從我的收藏排</button>
+      <button type="button" data-pls="all" aria-pressed="false">從全部校系排</button>
+    </div>
+    <div class="seg" id="planMode" role="group" aria-label="保留幾個挑戰" style="margin-top:8px">
+      <button type="button" data-plm="c1" aria-pressed="true">保留 1 個挑戰</button>
+      <button type="button" data-plm="c2" aria-pressed="false">保留 2 個挑戰</button>
     </div>
     <div id="planOut"></div>
     <div class="row" style="margin-top:10px"><button class="ghost" id="planFav" type="button">全部加入收藏</button></div>
@@ -381,7 +389,8 @@ let prs = store.get("prs", [null,null,null,null,null]) || [null,null,null,null,n
 let skip = new Set((store.get("skip", []) || []).filter(i => i >= 0 && i <= 4));
 let picks = new Set((store.get("picks", []) || []).filter(i => i >= 0 && i <= 4));
 let pickMode = ["any","all","only"].includes(store.get("pickMode","any")) ? store.get("pickMode","any") : "any";
-let planMode = ["safe3","bal"].includes(store.get("planMode","safe3")) ? store.get("planMode","safe3") : "safe3";
+let planMode = ({safe3:"c1", bal:"c2"})[store.get("planMode","c1")] || (["c1","c2"].includes(store.get("planMode","c1")) ? store.get("planMode","c1") : "c1");
+let planSrc = store.get("planSrc", "fav") === "all" ? "all" : "fav";
 let planKeys = [];
 const state = {g: store.get("g","all"), cat: null, dept: "", school: "", sort: "strict", favOnly: false, shown: PAGE};
 
@@ -559,9 +568,10 @@ function cardHTML(e){
   else if (r.cr === "D" && r.st === "same") chips.push(`<span class="chip warn">採計可能有變動，以 12 月簡章為準</span>`);
   if (e.years) chips.push(...yearChips(e));
   else if (r.src !== "hist") chips.push(`<span class="chip">沒有歷年資料</span>`);
-  chips.push(`<span class="chip">篩選嚴格度：${r.tier}</span>`);
+  if (r.tier) chips.push(`<span class="chip">篩選嚴格度：${r.tier}</span>`);
   if (r.st === "same" && r.stab) chips.push(`<span class="chip ${r.stab === "變動大" ? "warn" : ""}">歷年門檻：${r.stab}</span>`);
   if (r.low) chips.push(`<span class="chip warn">報名人數${r.low === "低" ? "少" : "偏少"}，門檻起伏可能大</span>`);
+  { const pa = r.c.filter(c => c.prAdj); if (pa.length) chips.push(`<span class="chip warn" title="依 115、116 年全國級分分布換算">116 年${pa.map(c => SUBJ[c.s[0]] + (c.prAdj > 0 ? "整體考得比較高，門檻提高 " : "整體考得比較低，門檻降低 ") + Math.abs(c.prAdj) + " 級分").join("；")}</span>`); }
   { const rc = riskChip(r); if (rc) chips.push(rc); const sc_ = strengthChip(r); if (sc_) chips.push(sc_); }
   if (r.tie && r.tie.length) {
     const lastM = e.res.length ? e.res[e.res.length - 1].m : null;
@@ -632,47 +642,121 @@ function skipUI(){
 }
 
 const CATTX = {safe:"保底", pass:"適中", near:"挑戰"};
-function makePlan(all, mode){
-  const quota = mode === "bal" ? {near:2, pass:2, safe:2} : {near:1, pass:2, safe:3};
-  const P = e => e.r.p == null ? 9 : e.r.p;
-  const pool = {
-    safe: all.filter(e => e.cat === "safe").sort((a,b) => P(a) - P(b)),   /* 保底也挑要求高的，避免高分低就 */
-    pass: all.filter(e => e.cat === "pass").sort((a,b) => P(a) - P(b)),
-    near: all.filter(e => e.cat === "near").sort((a,b) => (a.plan ? a.plan.t : 9) - (b.plan ? b.plan.t : 9) || P(a) - P(b))
-  };
-  const out = [], used = new Set(), schools = new Set();
-  const take = (cat, want, strictSchool) => {
-    for (const e of pool[cat]) {
-      if (want <= 0) break;
-      const k = keyOf(e.r); if (used.has(k)) continue;
-      if (strictSchool && schools.has(e.r.school)) continue;
-      used.add(k); schools.add(e.r.school); out.push({e, role: cat}); want--;
+/* ===== 排志願：機率模型（官方 114、115 國立校系回測得到的門檻誤差分布）=====
+   每個校系模擬 PM 次「116 實際門檻」：預估中心＋該類關卡的歷史誤差（同校系各關會一起偏高或偏低）＋同一科全國一起偏高偏低的小成分。
+   門檻模擬與學生分數無關，所以每個校系只算一次。 */
+const RQ = {"09|first|2": [-11.01, -8.67, -7.36, -4.04, -4.03, -4.01, -3.06, -3.04, -3.01, -2.06, -2.05, -2.04, -1.04, -1.04, -1.04, -0.91, -0.25, -0.04, -0.04, -0.04, -0.04, -0.01, -0.01, -0.01, -0.01, -0.01, 0.04, 0.48, 0.86, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 1.48, 1.77, 1.96, 1.96, 2.61, 3.99], "09|other|2": [-5.01, -3.36, -1.67, -1.04, -1.01, -0.04, -0.04, -0.04, -0.04, -0.04, -0.02, -0.01, -0.01, -0.01, -0.01, 0.11, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.96, 0.97, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 1.23, 1.96, 1.96, 1.96, 1.96, 1.98, 1.99, 1.99, 1.99, 1.99, 3.99], "09|first|1": [-8.51, -4.61, -4.51, -4.02, -3.02, -2.02, -2.02, -1.51, -1.51, -1.02, -1.02, -1.02, -1.02, -1.02, -1.02, -1.02, -0.51, -0.51, -0.51, -0.02, -0.02, -0.02, -0.02, -0.02, -0.02, 0.49, 0.49, 0.49, 0.49, 0.49, 0.49, 0.49, 0.49, 0.98, 0.98, 1.49, 1.49, 1.49, 2.08, 2.54, 3.49], "09|other|1": [-8.51, -2.02, -1.51, -1.02, -1.02, -0.7, -0.51, -0.51, -0.51, -0.51, -0.51, -0.02, -0.02, -0.02, -0.02, -0.02, -0.02, -0.02, -0.02, -0.02, 0.49, 0.49, 0.49, 0.49, 0.49, 0.49, 0.49, 0.49, 0.49, 0.49, 0.49, 0.98, 0.98, 0.98, 0.98, 1.17, 1.49, 1.49, 1.98, 1.98, 3.49], "09|loose|1": [-2.51, -2.51, -2.36, -2.05, -1.71, -1.51, -1.51, -1.24, -0.92, -0.58, -0.51, -0.43, -0.12, -0.02, 0.03, 0.36, 0.49, 0.49, 0.49, 0.49, 0.49, 0.81, 0.98, 0.98, 1.29, 1.49, 1.49, 1.49, 1.49, 1.49, 1.74, 1.98, 1.98, 2.21, 2.54, 2.86, 3.18, 3.52, 3.83, 4.33, 4.98], "09|all": [-11.01, -4.51, -3.31, -2.06, -2.01, -1.51, -1.02, -1.02, -1.02, -0.51, -0.51, -0.51, -0.51, -0.04, -0.02, -0.02, -0.02, -0.02, -0.02, -0.02, -0.01, 0.49, 0.49, 0.49, 0.49, 0.49, 0.49, 0.49, 0.96, 0.98, 0.98, 0.98, 0.99, 0.99, 1.49, 1.49, 1.96, 1.98, 1.99, 2.85, 4.99], "21|other|1": [-6.67, -3.55, -2.66, -1.48, -1.01, -1.01, -1.01, -1.01, -1.01, -1.01, -0.75, -0.67, -0.6, -0.01, -0.01, -0.01, -0.01, 0.32, 0.33, 0.33, 0.33, 0.33, 0.33, 0.33, 0.33, 0.33, 0.33, 0.81, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 1.33, 1.33, 1.33, 1.33, 1.88, 2.33], "21|first|1": [-4.67, -4.67, -4.67, -4.58, -4.34, -4.09, -4.01, -4.01, -4.01, -3.63, -3.26, -3.01, -3.01, -3.01, -2.67, -2.17, -1.67, -1.67, -1.67, -1.54, -1.17, -0.79, -0.67, -0.67, -0.67, -0.42, -0.17, -0.01, -0.01, -0.01, 0.24, 0.61, 0.99, 1.37, 1.74, 1.99, 1.99, 1.99, 2.08, 2.2, 2.33], "21|loose|1": [-4.01, -3.88, -3.75, -3.42, -2.67, -1.92, -1.42, -1.04, -0.67, -0.42, -0.17, 0.24, 0.99, 1.74, 1.99, 1.99, 1.99, 1.99, 1.99, 2.16, 2.66, 3.17, 3.33, 3.33, 3.33, 3.58, 3.83, 3.99, 3.99, 3.99, 3.99, 3.99, 3.99, 4.12, 4.25, 4.33, 4.33, 4.33, 5.33, 6.83, 8.33], "21|all": [-15.33, -6.09, -4.67, -4.01, -3.67, -3.1, -3.01, -2.19, -1.67, -1.01, -1.01, -1.01, -0.94, -0.67, -0.67, -0.33, -0.01, -0.01, -0.01, -0.01, 0.33, 0.33, 0.33, 0.33, 0.33, 0.99, 0.99, 0.99, 0.99, 1.33, 1.33, 1.88, 1.98, 1.99, 1.99, 2.33, 3.07, 3.96, 4.09, 4.75, 8.33]};
+const PM = 800;
+const rng32 = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const gauss = r => { let u = 0; while (!u) u = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * r()); };
+const ncdf = z => { const t = 1 / (1 + .2316419 * Math.abs(z)), d = .3989423 * Math.exp(-z * z / 2), p = d * t * (.3193815 + t * (-.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274)))); return z > 0 ? 1 - p : p; };
+const hashS = s => { let h = 2166136261; for (const ch of s) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+const qOf = (q, u) => { const x = u * (q.length - 1), i = Math.floor(x); return i >= q.length - 1 ? q[q.length - 1] : q[i] + (q[i + 1] - q[i]) * (x - i); };
+const SHOCK = (() => { const r = rng32(116), a = new Float32Array(PM * 5); for (let i = 0; i < a.length; i++) a[i] = .4 * gauss(r); return a; })();
+/* 整年共同變動：同一年所有校系、所有科目一起偏高或偏低（113～115 年每科平均偏移 +0.9、0、−0.5 級分）；每科 0.55 級分 */
+const YEARSH = (() => { const r = rng32(2027), a = new Float32Array(PM); for (let i = 0; i < PM; i++) a[i] = .55 * gauss(r); return a; })();
+const isLoose = (r, gi) => gi === 0 && r.c.length > 1 && r.c[0].y && r.c[0].y[2] != null && r.c[0].y[2] / r.c[0].s.length < 8;
+const SIMC = new Map();
+function simTh(r){
+  const k = keyOf(r); if (SIMC.has(k)) return SIMC.get(k);
+  const rr = rng32(hashS(k)), z = new Float32Array(PM); for (let m = 0; m < PM; m++) z[m] = gauss(rr);
+  const wide = r.st === "same" && r.src === "hist" ? 1 : r.st === "same" ? 1.3 : 1.5;   /* 沒有三年同科目資料、或 116 改科目：誤差放寬 */
+  const th = r.c.map((c, gi) => {
+    const t = isLoose(r, gi) ? "loose" : gi === 0 ? "first" : "other", n = Math.min(c.s.length, 2);
+    const q = RQ[`${r.g}|${t}|${n}`] || RQ[`${r.g}|all`], a = new Float32Array(PM);
+    for (let m = 0; m < PM; m++) {
+      let v = c.need + wide * qOf(q, ncdf(.62 * z[m] + .78 * gauss(rr)));
+      for (const i of c.s) v += SHOCK[m * 5 + i];
+      v += YEARSH[m] * c.s.length;
+      a[m] = Math.round(v);
     }
-    return want;
-  };
-  let short = {};
-  for (const c of ["near","pass","safe"]) { let w = take(c, quota[c], true); if (w > 0) w = take(c, w, false); short[c] = w; }
-  /* 某一類不夠時，往相鄰的類別補：挑戰不足補適中，保底不足補適中 */
-  for (const c of ["near","safe"]) if (short[c] > 0) short[c] = take("pass", short[c], false);
-  return {out, short};
+    return a;
+  });
+  SIMC.set(k, th); return th;
 }
+function passVec(r){                       /* 這位學生在每次模擬中是否通過全部關卡 */
+  const th = simTh(r), out = new Uint8Array(PM), you = r.c.map(c => sumOf(c, scores));
+  for (let m = 0; m < PM; m++) { let ok = 1; for (let g = 0; g < th.length; g++) if (you[g] < th[g][m]) { ok = 0; break; } out[m] = ok; }
+  return out;
+}
+const meanV = v => { let s = 0; for (const x of v) s += x; return s / v.length; };
+function thinOf(r){                        /* 最吃緊的一關、其中學生最弱的那一科，和每科多幾分 */
+  let best = null;
+  r.c.forEach(c => { const per = (sumOf(c, scores) - c.need) / c.s.length; if (!best || per < best.per) best = {c, per}; });
+  return {subj: best.c.s.reduce((a, i) => scores[i] < scores[a] ? i : a, best.c.s[0]), per: best.per};
+}
+const PLAN_FLOOR = .08, PLAN_TARGET = .99;
+function makePlan(all, nChal, src){
+  const ok = e => e.cat !== "out" && e.cat !== "wait" && e.r.c.length;
+  let pool = all.filter(ok);
+  if (src === "fav") pool = pool.filter(e => favs.has(keyOf(e.r)));
+  const X = pool.map(e => { const v = passVec(e.r); return {e, v, p: meanV(v), t: thinOf(e.r), pref: e.r.p == null ? 9 : e.r.p}; });
+  const out = [];
+  const heavy = x => x.t.per < 1 && out.filter(o => o.t.subj === x.t.subj && o.t.per < 1).length >= 2;
+  const dr = X.filter(x => x.p >= PLAN_FLOOR && x.p < .6).sort((a, b) => a.pref - b.pref);
+  for (const x of dr) { if (out.length >= nChal) break; if (out.every(o => o.t.subj !== x.t.subj)) { x.role = "挑戰"; out.push(x); } }
+  for (const x of dr) { if (out.length >= nChal) break; if (!out.includes(x)) { x.role = "挑戰"; out.push(x); } }
+  const solid = x => x.e.r.c.every((c, gi) => (sumOf(c, scores) - c.need) / c.s.length >= 1 && !isLoose(x.e.r, gi));
+  if (!out.some(solid)) {
+    const sj = X.filter(x => !out.includes(x) && solid(x)).sort((a, b) => (b.p >= .9) - (a.p >= .9) || a.pref - b.pref);
+    if (sj.length) { sj[0].role = "保底"; out.push(sj[0]); }
+  }
+  const fail = () => { const f = new Uint8Array(PM).fill(1); for (const o of out) for (let m = 0; m < PM; m++) if (o.v[m]) f[m] = 0; return f; };
+  const cover = () => out.length ? 1 - meanV(fail()) : 0;
+  while (out.length < 6 && cover() < PLAN_TARGET) {
+    const f = fail(), cs = X.filter(x => !out.includes(x)); if (!cs.length) break;
+    cs.forEach(x => { let g = 0; for (let m = 0; m < PM; m++) if (f[m] && x.v[m]) g++; x.gain = g / PM; });
+    const g0 = Math.max(...cs.map(x => x.gain));
+    const near = cs.filter(x => x.gain >= g0 - .005).sort((a, b) => heavy(a) - heavy(b) || a.pref - b.pref);
+    near[0].role = near[0].p >= .9 ? "保底" : near[0].p >= .3 ? "穩住機會" : "挑戰"; out.push(near[0]);
+  }
+  const rest = X.filter(x => !out.includes(x) && x.p >= .3).sort((a, b) => a.pref - b.pref);
+  while (out.length < 6 && rest.length) { const i = Math.max(0, rest.findIndex(x => !heavy(x))); const x = rest.splice(i, 1)[0]; x.role = "想讀"; out.push(x); }
+  if (out.length < 6) X.filter(x => !out.includes(x)).sort((a, b) => b.p - a.p).slice(0, 6 - out.length).forEach(x => { x.role = x.p >= .9 ? "保底" : x.p >= .3 ? "想讀" : "挑戰"; out.push(x); });
+  /* 收藏不夠或「至少過一個」偏低時：從全部校系找最能補強的一個 */
+  let add = null;
+  if (src === "fav" && cover() < .95) {
+    const f = fail();
+    const cs = all.filter(e => ok(e) && !favs.has(keyOf(e.r))).map(e => { const v = passVec(e.r); let g = 0; for (let m = 0; m < PM; m++) if (f[m] && v[m]) g++; return {e, g: g / PM, p: meanV(v), pref: e.r.p == null ? 9 : e.r.p}; });
+    cs.sort((a, b) => b.g - a.g || a.pref - b.pref);
+    if (cs.length && cs[0].g > .01) add = cs[0];
+  }
+  return {out, pool: X.length, cover: cover(), add, coverAdd: add ? cover() + add.g : null};
+}
+const pctTxt = p => p >= .98 ? "98% 以上" : Math.round(p * 100) + "%";
+const chTxt = p => p < .05 ? "不到 1 成" : p >= .95 ? "9 成 5 以上" : `約 ${Math.max(1, Math.round(p * 10))} 成`;
 function planHTML(all){
-  const {out, short} = makePlan(all, planMode);
+  const nChal = planMode === "c2" ? 2 : 1;
+  const src = planSrc === "fav" && !favs.size ? "all" : planSrc;
+  const {out, pool, cover, add, coverAdd} = makePlan(all, nChal, src);
   planKeys = out.map(x => keyOf(x.e.r));
-  if (!out.length) return `<p class="empty">目前的條件下找不到可以排的校系。可以放寬群別或清除點選的科目。</p>`;
-  const cnt = {near:0, pass:0, safe:0}; out.forEach(x => cnt[x.e.cat]++);
-  const miss = 6 - out.length;
+  const pre = src !== planSrc ? `<p class="note">你還沒有收藏校系，先從全部校系排。到下面的清單按 ☆ 收藏「願意讀」的校系（建議 8～15 個），就會只從收藏裡排。</p>` : "";
+  if (!out.length) return `<p class="empty">目前的條件下找不到可以排的校系。可以放寬群別、清除點選的科目，或多收藏幾個校系。</p>`;
+  const RC = {"挑戰":"near", "穩住機會":"pass", "想讀":"pass", "保底":"safe"};
   const items = out.map(x => {
-    const e = x.e, r = e.r, w = e.weak;
-    const tag = x.e.cat === x.role ? `<span class="pill ${e.cat}">${NAME[e.cat]}</span>` : `<span class="pill ${e.cat}">${NAME[e.cat]}</span>`;
-    const detail = w ? `${esc(label(w.c))}：${marginText(w.m)}` : "";
-    const chg = e.demoted ? "（116 年改了採計科目，較不確定）" : "";
-    return `<div class="it ${e.cat}"><div class="tx"><span class="school">${esc(r.school)}・${gName(r.g)}</span><b>${esc(r.dept)}</b>${detail}${chg}</div>${tag}</div>`;
+    const r = x.e.r, t = x.t;
+    const thin = t.per < 1 ? `最吃緊：${SUBJ[t.subj]}${t.per < 0 ? "（還差一點）" : "（剛好夠）"}` : `每一關都有餘裕`;
+    return `<div class="it ${RC[x.role]}"><div class="tx"><span class="school">${esc(r.school)}・${gName(r.g)}</span><b>${esc(r.dept)}</b>通過第一階段的機會：${chTxt(x.p)}<br>${thin}</div><span class="pill ${RC[x.role]}">${x.role}</span></div>`;
   }).join("");
-  let adv = `搭配結果：挑戰 ${cnt.near} 個、適中 ${cnt.pass} 個、保底 ${cnt.safe} 個。`;
-  if (miss > 0) adv += ` 只排得出 ${out.length} 個，還差 ${miss} 個：符合條件的校系不夠，可以放寬群別或科目。`;
-  if (cnt.safe === 0) adv += " 沒有保底，可能一個都過不了，建議放寬條件找保底。";
-  return `<div class="mix"><span class="chip warn">挑戰 ${cnt.near}</span><span class="chip">適中 ${cnt.pass}</span><span class="chip ok">保底 ${cnt.safe}</span></div>${items}<div class="adv${cnt.safe === 0 || miss > 0 ? " bad" : ""}">${adv}</div>`;
+  const cnt = {}; out.forEach(x => cnt[x.role] = (cnt[x.role] || 0) + 1);
+  const conc = {}; out.forEach(x => { if (x.t.per < 1) conc[x.t.subj] = (conc[x.t.subj] || 0) + 1; });
+  const [cs, cn] = Object.entries(conc).sort((a, b) => b[1] - a[1])[0] || [null, 0];
+  const lines = [];
+  lines.push(`這 ${out.length} 個志願，至少通過一個第一階段的機會粗估 <b>${pctTxt(cover)}</b>。`);
+  if (out.length < 6) lines.push(src === "fav" ? `收藏裡可以排的只有 ${pool} 個，還差 ${6 - out.length} 個。多收藏幾個願意讀的校系，或改按「從全部校系排」。` : `符合條件的校系不夠，只排得出 ${out.length} 個。`);
+  if (!out.some(x => x.role === "挑戰")) lines.push("名單裡找不到通過機會在 1～6 成之間的校系，所以這次沒有挑戰。");
+  if ((cnt["挑戰"] || 0) > nChal) lines.push(`名單裡比較穩的校系不夠，所以挑戰比你設定的 ${nChal} 個多。`);
+  if (cn >= 3) lines.push(`有 ${cn} 個志願都靠「${SUBJ[cs]}」剛好過。同一科的門檻有時會同一年在各校一起偏高，這幾個可能一起受影響。`);
+  else if (cn) lines.push(`靠同一科剛好過的志願最多 ${cn} 個，沒有集中在同一科。`);
+  if (add) lines.push(`收藏裡缺少夠穩的校系。例如加入收藏外的「${esc(add.e.r.school)} ${esc(add.e.r.dept)}」（通過機會 ${chTxt(add.p)}），至少過一個可提高到約 ${pctTxt(Math.min(coverAdd, .99))}；也可以自己找一個願意讀、每一關都有餘裕的校系。`);
+  else if (cover < .9) lines.push("至少過一個的機會偏低，建議再找一個每一關都有餘裕的保底。");
+  const bad = cover < .9 || out.length < 6;
+  return `${pre}<div class="mix">${["挑戰","穩住機會","想讀","保底"].filter(k => cnt[k]).map(k => `<span class="chip ${k === "保底" ? "ok" : k === "挑戰" ? "warn" : ""}">${k} ${cnt[k]}</span>`).join("")}</div>${items}<div class="adv${bad ? " bad" : ""}">${lines.join("<br>")}</div>
+  <details style="margin-top:8px"><summary>這樣排的原則與根據</summary><div class="note">
+  ① 先保留 ${nChal} 個最想挑戰的校系（機會在 1～6 成之間），盡量卡在不同科目。② 至少放 1 個每一關每科都多 1 級分以上的保底（去年第一關門檻特別低的不算，因為隔年常回升）。③ 接著每次加入「最能提高至少過一個機會」的校系，直到 99%；機會差不多時，選比較熱門、不和前面卡同一科的。④ 還有名額，就放機會 3 成以上中比較熱門的。<br>
+  「機會」是用 114、115 年官方門檻回測估的：預估中心加上各類關卡的歷史誤差，再加上「整年一起偏高或偏低」的可能（例如 113 年門檻普遍比預期高約 1 級分），所以多個志願不會被當成互不相干；沒有三年資料或 116 改科目的校系，誤差放寬。回測中估 9 成 7 以上的實際約 98% 通過、估 5～7 成的實際約 7 成，所以最高只寫到 98%。這只算第一階段篩選，不含第二階段備審與面試；「比較熱門」依歷年錄取排名。<br>
+  用 332 位商管學生的真實級分和 114、115 年真實門檻回測（每人隨機 12 個願意讀的校系）：和原本的「1 挑戰＋2 適中＋3 保底」相比，一個都沒過的比例差不多（約 1%），最想讀的前 4 名平均多排進 0.5 個、其中至少過一個的機會多 2～4%；3 個以上志願卡同一吃緊科目的比例，從 12～47% 降到 9～27%。代價是平均通過數少 0.3～0.4 個（少放了用不到的保底）。
+  </div></details>`;
 }
 function favMixHTML(all){
   const mine = all.filter(e => favs.has(keyOf(e.r)));
@@ -734,6 +818,7 @@ function render(){
   $("planOut").innerHTML = planHTML(all);
   $("favMix").innerHTML = favMixHTML(all);
   document.querySelectorAll("[data-plm]").forEach(b => b.setAttribute("aria-pressed", b.dataset.plm === planMode));
+  document.querySelectorAll("[data-pls]").forEach(b => b.setAttribute("aria-pressed", b.dataset.pls === planSrc));
   if (counts.out) {
     const b = document.createElement("button");
     b.type = "button"; b.className = "linkbtn"; b.dataset.cat = "out";
@@ -748,12 +833,49 @@ function render(){
   $("demo").hidden = !isDemo;
 }
 
+/* 模考級分 → 全國 PR（粗估）：116 屆模考 332 人的校內排名位置，對到 113 屆彰商 09 學生實際統測級分的同一位置，再換成 115 年全國 PR */
+/* ===== 模考 → 統測 → 全國 PR（五科一起推估）=====
+   用 116 屆 332 人模考：同一科同分、其他科不同的學生差異，估出每科模考的可信度（國 .95、英 .86、數 .69、專一 .95、專二 .91）；
+   推估某一科時也參考其他四科（可信度越低越靠其他科），換到 113 屆彰商同位置的統測級分，再換成 115 年全國 PR。 */
+const MM = {"MZ": [[-2.967, -2.967, -2.967, -2.967, -2.967, -2.967, -2.747, -2.432, -2.033, -1.649, -0.932, -0.255, 0.33, 1.082, 2.257, 2.967], [-2.967, -2.967, -2.967, -2.365, -1.799, -1.245, -0.827, -0.494, -0.14, 0.236, 0.594, 0.944, 1.368, 1.903, 2.512, 2.967], [-2.967, -2.967, -2.967, -2.747, -2.17, -1.635, -1.295, -0.98, -0.617, -0.338, -0.06, 0.236, 0.498, 0.92, 1.607, 2.512], [-2.967, -2.967, -2.967, -2.967, -2.967, -2.967, -2.612, -2.365, -2.132, -1.762, -1.245, -0.735, -0.205, 0.468, 1.253, 2.064], [-2.967, -2.967, -2.967, -2.967, -2.747, -2.365, -1.926, -1.567, -1.253, -0.87, -0.447, -0.083, 0.267, 0.78, 1.428, 2.064]], "W": [[0.9647, 0.0069, 0.0009, 0.0127, 0.0099], [0.0195, 0.8982, 0.0113, 0.0388, 0.0253], [0.0063, 0.0286, 0.6664, 0.096, 0.2114], [0.0127, 0.0137, 0.0134, 0.9278, 0.0474], [0.0175, 0.0158, 0.0521, 0.0836, 0.8619]], "AQ": [[6.0, 6.22, 8.0, 8.33, 9.0, 9.0, 9.0, 9.77, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.41, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 15.0], [4.0, 5.0, 5.22, 6.0, 6.44, 7.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 10.0, 10.0, 10.0, 10.0, 10.42, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.74, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.59, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.9, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0], [4.0, 5.11, 7.0, 7.0, 7.0, 7.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 9.0, 9.0, 9.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0], [5.0, 7.0, 8.0, 8.0, 8.0, 9.0, 9.0, 9.0, 9.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.18, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 15.0, 15.0], [3.0, 4.0, 5.0, 5.0, 5.0, 6.0, 6.0, 6.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 7.0, 8.0, 8.0, 8.0, 8.0, 8.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 11.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 14.0, 15.0, 15.0]], "SD": [0.222, 0.361, 0.495, 0.218, 0.279], "n": 332};
+const ncdf2 = z => { const t = 1 / (1 + .2316419 * Math.abs(z)), d = .3989423 * Math.exp(-z * z / 2), p = d * t * (.3193815 + t * (-.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274)))); return z > 0 ? 1 - p : p; };
+function mockEst(i){                         /* 回傳 {k: 推估統測級分, lo, hi} */
+  const z = scores.map((v, j) => MM.MZ[j][clamp(v)]), t = MM.W[i].reduce((a, w, j) => a + w * z[j], 0);
+  const q = zz => { const u = ncdf2(zz) * 100, f = Math.floor(u), aq = MM.AQ[i]; return f >= 100 ? aq[100] : aq[f] + (aq[f + 1] - aq[f]) * (u - f); };
+  const r = v => Math.max(1, Math.min(15, Math.round(v)));
+  return {k: r(q(t)), lo: r(q(t - MM.SD[i])), hi: r(q(t + MM.SD[i]))};
+}
+const natPRof = (i, k) => { const t = RANK["115"][["guo","eng","mB","p1","p2"][i]]; return Math.round(100 - ((t[k] ?? 0) + (k < 15 ? t[k + 1] : 0)) / 2); };
 function autoPR(i){
-  const key = ["guo","eng","mB","p1","p2"][i], k = clamp(scores[i]), c = RANK[115][key];
-  return Math.max(0, Math.min(100, Math.round(100 - (c[k] + (k < 15 ? c[k+1] : 0)) / 2)));
+  if (clamp(scores[i]) === 0) return 0;
+  return natPRof(i, mockEst(i).k);
 }
 const effPR = i => prs[i] != null ? prs[i] : autoPR(i);
 const RANK = {"113":{"guo":[100.0,100.0,99.9,99.4,96.5,92.6,87.0,77.9,67.9,55.0,39.8,27.3,15.2,5.1,1.1,0.1],"eng":[100.0,100.0,99.9,98.7,89.1,72.3,59.7,50.5,43.5,36.9,30.8,24.6,18.7,13.2,7.5,2.6],"mB":[100.0,100.0,99.9,98.2,91.7,84.0,67.4,52.1,44.5,32.1,22.7,18.7,12.5,7.6,5.3,2.0],"p1":[100.0,100.0,100.0,100.0,99.7,98.6,95.9,89.6,79.4,64.2,46.0,31.4,17.2,5.4,1.2,0.1],"p2":[100.0,100.0,100.0,99.6,94.6,78.5,58.2,43.1,35.0,28.3,21.5,16.4,11.3,5.9,2.5,0.4]},"114":{"guo":[100.0,100.0,99.9,99.5,96.7,92.7,85.5,73.1,59.7,43.7,26.6,15.0,6.5,1.6,0.3,0.0],"eng":[100.0,100.0,99.9,98.8,89.3,72.4,59.5,50.3,42.7,35.8,28.7,22.6,16.4,10.5,5.3,1.3],"mB":[100.0,100.0,99.8,97.3,86.6,74.8,51.8,36.4,30.3,21.3,14.7,11.9,7.1,3.8,2.3,0.4],"p1":[100.0,100.0,100.0,99.9,99.0,96.2,89.7,77.3,65.2,53.1,40.5,30.9,20.8,10.8,4.3,0.7],"p2":[100.0,100.0,100.0,99.8,96.9,87.4,73.4,58.3,48.1,38.8,29.6,22.6,15.2,7.8,3.2,0.4]},"115":{"guo":[100.0,100.0,99.9,99.4,96.5,92.9,87.1,77.4,66.7,52.8,35.7,22.0,10.3,2.7,0.5,0.0],"eng":[100.0,100.0,99.9,97.7,83.1,64.2,51.5,43.2,36.7,30.8,25.4,20.8,16.2,11.9,7.4,2.7],"mB":[100.0,99.9,99.8,96.5,84.1,70.9,48.5,33.0,27.2,18.8,12.5,9.9,5.8,3.0,1.9,0.6],"p1":[100.0,100.0,100.0,99.8,97.7,91.4,81.3,68.1,57.2,44.9,31.6,21.5,12.5,4.7,1.4,0.2],"p2":[100.0,100.0,100.0,99.7,95.7,83.4,67.0,51.7,42.7,35.1,27.4,21.2,15.1,8.5,4.0,0.8]}};
+/* ===== 依全國 PR 位置調整 116 門檻 =====
+   116 統測成績公布、補上 RANK["116"] 後才會啟動。只調整「單科」關卡：
+   把 115 年門檻在 115 年全國分布的位置（同級分人數的中點），換到 116 年分布的同一位置；
+   移動 ≥0.75 級分才調整，調整量四捨五入（112～115 年回測：分布大變的年份明顯變準，小變的年份幾乎不變）。 */
+const PR_TH = .75, RK = ["guo","eng","mB","p1","p2"];
+function prShift(y0, y1, i, T){
+  const a = RANK[y0][RK[i]], b = RANK[y1][RK[i]], mid = (t, k) => ((t[k] ?? 0) + (k + 1 <= 15 ? t[k + 1] : 0)) / 2;
+  const q = mid(a, T), m = []; for (let k = 0; k <= 15; k++) m.push(mid(b, k));
+  for (let k = 0; k < 15; k++) if (m[k] >= q && q >= m[k + 1]) return k + (m[k] - q) / (m[k] - m[k + 1] || 1) - T;
+  return (q > m[0] ? 0 : 15) - T;
+}
+function applyPR116(){
+  if (!RANK["116"]) return 0;
+  let n = 0;
+  DATA.rows.forEach(r => r.c.forEach(c => {
+    if (c.prAdj != null || c.s.length !== 1 || !c.y || c.y[2] == null) return;
+    const sh = prShift("115", "116", c.s[0], c.y[2]);
+    c.prShift = sh; c.prAdj = 0;
+    if (Math.abs(sh) < PR_TH) return;
+    const d = Math.round(sh), cl = v => Math.max(0, Math.min(15, v));
+    c.need = cl(c.need + d); c.lo = cl(c.lo + d); c.hi = cl(c.hi + d); c.prAdj = d; n++;
+  }));
+  return n;
+}
 function rankUI(){
   const keys = ["guo","eng","mB","p1","p2"], fmt = top => top < 0.1 ? "0.1% 內" : top.toFixed(top < 10 ? 1 : 0) + "%";
   $("rankOut").innerHTML = '<table class="hist" style="width:100%"><tr><th>科目</th><th>級分</th><th>113</th><th>114</th><th>115</th></tr>' + SUBJ.map((s,i) => {
@@ -761,7 +883,12 @@ function rankUI(){
     const cells = [113,114,115].map(y => `<td>${k === 0 ? "—" : "前 " + fmt(RANK[y][keys[i]][k])}</td>`).join("");
     return `<tr><td><b>${s}</b></td><td>${k}</td>${cells}</tr>`;
   }).join("") + '</table>';
-  SUBJ.forEach((s,i) => { const el = $("pr" + i); if (el) el.placeholder = prs[i] != null ? "" : "自動 " + autoPR(i); });
+  SUBJ.forEach((s,i) => { const el = $("pr" + i); if (!el) return; el.placeholder = prs[i] != null ? "" : "自動 " + autoPR(i);
+    if (clamp(scores[i])) { const e = mockEst(i); el.title = `粗估，尚未驗證：統測可能 ${e.lo === e.hi ? e.lo : e.lo + "～" + e.hi} 級分、全國 PR 約 ${e.lo === e.hi ? natPRof(i, e.lo) : natPRof(i, e.lo) + "～" + natPRof(i, e.hi)}`; } });
+  $("prExplain").innerHTML = SUBJ.map((s,i) => { if (!clamp(scores[i])) return ""; const e = mockEst(i); const sp = Math.round(100 * ncdf2(MM.MZ[i][clamp(scores[i])])); return `${s}：模考 ${scores[i]} 級分，校內約贏過 ${sp}% 同學 → 依學長姐經驗，統測可能 ${e.lo === e.hi ? e.lo : e.lo + "～" + e.hi} 級分、全國 PR 約 ${e.lo === e.hi ? natPRof(i, e.lo) : natPRof(i, e.lo) + "～" + natPRof(i, e.hi)}`; }).filter(Boolean).join("<br>");
+  $("prNote").textContent = RANK["116"]
+    ? `已依 116 年全國分布調整 ${DATA.rows.reduce((n, r) => n + r.c.filter(c => c.prAdj).length, 0)} 個單科關卡的預估門檻：如果某一科今年整體考得比較高（或比較低），去年門檻在今年會對應到不同級分，這裡已自動換算。`
+    : "116 年統測成績公布後，會依全國分布自動調整單科關卡的預估門檻：如果某一科今年整體考得比較高，同樣的排名位置級分會變高，預估門檻也會跟著提高（反之亦然）。";
 }
 function buildScores(){
   $("scores").innerHTML = SUBJ.map((s,i) => `<div class="sc"><label for="s${i}">${s}</label>
@@ -893,6 +1020,7 @@ document.addEventListener("click", ev => {
   if (t.dataset.d) setScore(+t.dataset.i, scores[+t.dataset.i] + Number(t.dataset.d));
   else if (t.dataset.g) { state.g = t.dataset.g; store.set("g", state.g); syncSchools(); refilter(); }
   else if (t.dataset.plm) { planMode = t.dataset.plm; store.set("planMode", planMode); render(); }
+  else if (t.dataset.pls) { planSrc = t.dataset.pls; store.set("planSrc", planSrc); render(); }
   else if (t.id === "planFav") { planKeys.forEach(k => favs.add(k)); store.set("favs", [...favs]); render(); }
   else if (t.dataset.pick !== undefined) { const i = +t.dataset.pick; picks.has(i) ? picks.delete(i) : picks.add(i); store.set("picks", [...picks]); refilter(); }
   else if (t.id === "clearAllFilters") { state.school = ""; state.dept = ""; state.favOnly = false; state.cat = null; picks.clear(); store.set("picks", []); if ($("school")) $("school").value = ""; syncDepts(); if ($("favOnly")) $("favOnly").setAttribute("aria-pressed", "false"); refilter(); }
@@ -941,6 +1069,7 @@ document.addEventListener("change", ev => {
     `<tr><td>${esc(x.school)}<br>${esc(x.dept)}（${x.g}${x.sys === "二專" ? "・二專" : ""}）</td><td>${names(x.s1)}</td><td>${names(x.s2)}</td></tr>`).join("") + `</tbody>`;
 })();
 if (!["all","09","21"].includes(state.g)) state.g = "all";
+const PR_N = applyPR116();
 syncSchools(); buildScores(); render();
 </script>
 </body>
